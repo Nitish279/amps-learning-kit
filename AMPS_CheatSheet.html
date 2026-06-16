@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMPS Frontend Cheat Sheet</title>
+<style>
+  :root{--ink:#0f172a;--muted:#64748b;--line:#cbd5e1;--blue:#2563eb;--green:#16a34a;--amber:#b45309;--violet:#7c3aed;--mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+  *{box-sizing:border-box}
+  body{margin:0;background:#eef1f6;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.45}
+  .sheet{max-width:1000px;margin:18px auto;background:#fff;padding:26px 30px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+  header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid var(--blue);padding-bottom:10px;margin-bottom:16px}
+  h1{font-size:22px;margin:0}
+  header .sub{color:var(--muted);font-size:13px}
+  .printbtn{background:var(--blue);color:#fff;border:none;border-radius:7px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer}
+  .cols{column-count:2;column-gap:24px}
+  .box{break-inside:avoid;border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:14px}
+  .box h2{font-size:13px;text-transform:uppercase;letter-spacing:.04em;margin:0 0 8px;color:var(--blue)}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:6px;padding:9px 11px;font-family:var(--mono);font-size:11px;line-height:1.5;overflow-x:auto;margin:6px 0;white-space:pre-wrap}
+  .k{color:#7dd3fc}.s{color:#86efac}.c{color:#94a3b8}
+  code{font-family:var(--mono);font-size:11.5px;background:#eef2f7;padding:1px 5px;border-radius:4px;color:#1e40af}
+  table{width:100%;border-collapse:collapse;font-size:11.5px}
+  td,th{text-align:left;padding:4px 6px;border-bottom:1px solid #e2e8f0;vertical-align:top}
+  th{color:var(--muted);font-size:10px;text-transform:uppercase}
+  ul{margin:4px 0;padding-left:16px;font-size:12px}
+  li{margin-bottom:4px}
+  .tag{font-family:var(--mono);font-weight:700;color:var(--violet)}
+  .g{color:var(--green);font-weight:700}.a{color:var(--amber);font-weight:700}
+  @media print{body{background:#fff}.sheet{box-shadow:none;margin:0;max-width:100%;padding:0}.printbtn{display:none}@page{margin:12mm}}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <header>
+    <div><h1>⚡ AMPS — Frontend Cheat Sheet</h1><div class="sub">JavaScript client · pub/sub · SOW · production · keep this at your desk</div></div>
+    <button class="printbtn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+  </header>
+
+  <div class="cols">
+    <div class="box">
+      <h2>The one idea</h2>
+      <p style="font-size:12px;margin:0">Publishers send messages to a <b>topic</b> without knowing who listens. Subscribers ask a topic for what they want (optionally <b>filtered</b>). The <b>AMPS engine</b> routes it all. You (frontend) mostly <b>subscribe and render</b>.</p>
+    </div>
+
+    <div class="box">
+      <h2>Connection URI</h2>
+      <pre><span class="c">// transport :// host : port /amps/ type</span>
+wss://amps-dev:9007/amps/json</pre>
+      <ul><li><code>wss</code> = secure WebSocket (use in prod), <code>ws</code> = plain</li><li>type = <code>json</code>, <code>fix</code>, <code>xml</code>, <code>bson</code>…</li></ul>
+    </div>
+
+    <div class="box">
+      <h2>Connect &amp; log on</h2>
+      <pre><span class="k">import</span> { Client, Command } <span class="k">from</span> <span class="s">'amps'</span>
+<span class="k">const</span> client = <span class="k">new</span> Client(<span class="s">'orders-ui-7f3a'</span>) <span class="c">// unique!</span>
+<span class="k">await</span> client.connect(<span class="s">'wss://host:9007/amps/json'</span>)
+<span class="k">await</span> client.logon(<span class="s">'user'</span>, <span class="s">'pass'</span>)</pre>
+    </div>
+
+    <div class="box">
+      <h2>Publish</h2>
+      <pre>client.publish(<span class="s">'MARKET_DATA'</span>,
+  { Symbol:<span class="s">'AAPL'</span>, TradePrice:192.45 })</pre>
+    </div>
+
+    <div class="box">
+      <h2>Subscribe (+ filter)</h2>
+      <pre><span class="k">const</span> onMsg = m =&gt; render(m.data)
+<span class="k">await</span> client.subscribe(onMsg, <span class="s">'MARKET_DATA'</span>)
+
+<span class="c">// with content filter (recommended: Command)</span>
+<span class="k">const</span> cmd = <span class="k">new</span> Command(<span class="s">'subscribe'</span>)
+  .topic(<span class="s">'ORDERS'</span>)
+  .filter(<span class="s">"/Symbol = 'AAPL' AND /Price &gt; 100"</span>)
+<span class="k">await</span> client.execute(cmd, onMsg)</pre>
+    </div>
+
+    <div class="box">
+      <h2>Live dashboard (SOW)</h2>
+      <pre><span class="c">// snapshot now + live updates forever</span>
+<span class="k">const</span> cmd = <span class="k">new</span> Command(<span class="s">'sow_and_subscribe'</span>)
+  .topic(<span class="s">'orders'</span>)
+  .filter(<span class="s">"/status = 'OPEN'"</span>)
+  .options(<span class="s">'oof'</span>)
+<span class="k">await</span> client.execute(cmd, onMsg)</pre>
+    </div>
+
+    <div class="box">
+      <h2>Message commands you handle</h2>
+      <table>
+        <tr><th>command</th><th>meaning → action</th></tr>
+        <tr><td class="tag">group_begin</td><td>snapshot starting</td></tr>
+        <tr><td class="tag">sow</td><td>existing record → add row</td></tr>
+        <tr><td class="tag">p</td><td>live publish → add/update row</td></tr>
+        <tr><td class="tag">oof</td><td>left the filter → <b>remove row</b></td></tr>
+        <tr><td class="tag">group_end</td><td>snapshot complete</td></tr>
+      </table>
+      <pre>m.header.command()  m.header.sowKey()  m.data</pre>
+    </div>
+
+    <div class="box">
+      <h2>Filter operators</h2>
+      <ul>
+        <li><code>=</code> <code>&lt;&gt;</code> <code>&lt;</code> <code>&gt;</code> <code>&lt;=</code> <code>&gt;=</code> — compare</li>
+        <li><code>AND</code> <code>OR</code> <code>NOT</code> ( ) — logic</li>
+        <li><code>LIKE</code> — regex match (PCRE)</li>
+        <li><code>BEGINS WITH</code> — prefix match</li>
+        <li>Fields use XPath: <code>/Symbol</code>, <code>/Derived/TodayVWAP</code></li>
+      </ul>
+    </div>
+
+    <div class="box">
+      <h2>Power features</h2>
+      <ul>
+        <li><b>Delta</b>: <code>delta_publish</code>/<code>delta_subscribe</code> send only changed fields.</li>
+        <li><b>Replay</b>: bookmark subscribe replays the transaction log from a point in time.</li>
+        <li><b>Queue</b>: each message goes to exactly one consumer (vs pub/sub = copy to all).</li>
+        <li><b>HA</b>: <code>HAClient</code> with a server list auto-fails-over and re-subscribes.</li>
+      </ul>
+    </div>
+
+    <div class="box">
+      <h2 style="color:#b45309">⚠️ Gotchas (read these)</h2>
+      <ul>
+        <li><span class="a">Unique client name</span> — AMPS uses it to detect duplicates.</li>
+        <li><span class="a">Unsubscribe / disconnect on unmount</span> — or you leak connections.</li>
+        <li><span class="a">Throttle rendering</span> — feeds can be 1000s msg/sec; batch DOM updates.</li>
+        <li><span class="a">Filters run server-side</span> — don't re-filter in the browser.</li>
+        <li><span class="a">Handle OOF</span> — or dashboards fill with stale rows.</li>
+        <li><span class="a">Use wss + HAClient in prod</span> — encrypted + survives failover.</li>
+        <li><span class="a">Never swallow errors</span> — a silent failure on a trading screen is dangerous.</li>
+      </ul>
+    </div>
+
+    <div class="box">
+      <h2>Ask your team lead for</h2>
+      <ul>
+        <li>Dev <b>connection URI</b> (host/port/type)</li>
+        <li><b>Topic names</b> + their message schemas</li>
+        <li>Which topics are <b>SOW-enabled</b></li>
+        <li>The <b>auth</b> mechanism + your entitlements</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</body>
+</html>

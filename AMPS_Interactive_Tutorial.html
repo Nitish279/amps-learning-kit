@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMPS for JS Devs — Interactive Tutorial</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#171c24; --panel2:#1e242e; --border:#2a313c;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#4ea1ff; --accent2:#7ee787;
+    --warn:#ffb454; --danger:#ff6b6b; --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;}
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 80px;}
+  header.hero{border:1px solid var(--border);background:linear-gradient(160deg,#1a2230,#141922);
+    border-radius:16px;padding:30px 28px;margin-bottom:26px;}
+  .badge{display:inline-block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--accent2);background:rgba(126,231,135,.1);border:1px solid rgba(126,231,135,.3);
+    padding:3px 10px;border-radius:999px;margin-bottom:14px;}
+  h1{margin:0 0 8px;font-size:30px;}
+  h2{font-size:22px;margin:34px 0 12px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+  h3{font-size:17px;margin:22px 0 8px;color:var(--accent);}
+  p{color:var(--text)}
+  .muted{color:var(--muted)}
+  .lead{font-size:16px;color:var(--muted);margin:0}
+  .grid{display:grid;gap:14px}
+  .concepts{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));margin-top:8px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px}
+  .card h4{margin:0 0 6px;font-size:15px;color:var(--accent2)}
+  .card p{margin:0;font-size:14px;color:var(--muted)}
+  .plan{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+  .week{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative}
+  .week .wk{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)}
+  .week h4{margin:4px 0 8px;font-size:16px}
+  .week ul{margin:0;padding-left:18px;font-size:13.5px;color:var(--muted)}
+  .week .chk{margin-top:10px;font-size:13px;color:var(--accent2)}
+  pre{background:#0b0e13;border:1px solid var(--border);border-radius:10px;padding:14px 16px;
+    overflow:auto;font-family:var(--mono);font-size:13px;line-height:1.5}
+  code{font-family:var(--mono)}
+  .tok-key{color:#ff7b72}.tok-str{color:#a5d6ff}.tok-com{color:#6e7781;font-style:italic}
+  .tok-fn{color:#d2a8ff}.tok-num{color:#79c0ff}
+  /* demo */
+  .demo{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:20px;margin-top:10px}
+  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+  button{background:var(--accent);color:#06223f;border:none;border-radius:8px;padding:9px 16px;
+    font-weight:600;font-size:14px;cursor:pointer;transition:filter .15s}
+  button:hover{filter:brightness(1.1)}
+  button.ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  .filterbox{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;
+    background:#0b0e13;border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--muted)}
+  .filterbox b{color:var(--accent2)}
+  .demo-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}
+  @media(max-width:760px){.demo-grid{grid-template-columns:1fr}}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)}
+  th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+  td.sym{font-weight:700}
+  .tablewrap{background:var(--panel2);border:1px solid var(--border);border-radius:10px;overflow:hidden;min-height:120px}
+  .tablehead{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border)}
+  .tablehead span{font-size:13px;color:var(--muted)}
+  .pill{font-size:11px;padding:2px 8px;border-radius:999px}
+  .pill.open{background:rgba(126,231,135,.14);color:var(--accent2)}
+  @keyframes flash{from{background:rgba(78,161,255,.35)}to{background:transparent}}
+  tr.flash td{animation:flash 1s ease-out}
+  .log{background:#0b0e13;border:1px solid var(--border);border-radius:10px;padding:10px;
+    height:300px;overflow:auto;font-family:var(--mono);font-size:12px;line-height:1.7}
+  .log .line{white-space:nowrap}
+  .c-group_begin,.c-group_end{color:var(--muted)}
+  .c-sow{color:var(--accent)}
+  .c-p{color:var(--accent2)}
+  .c-oof{color:var(--warn)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px}
+  .legend i{font-style:normal;font-family:var(--mono);padding:1px 6px;border-radius:4px}
+  .note{background:rgba(78,161,255,.08);border-left:3px solid var(--accent);padding:10px 14px;border-radius:6px;margin:14px 0;font-size:14px}
+  a{color:var(--accent)}
+  .reslist{columns:2;gap:20px;font-size:14px}
+  @media(max-width:600px){.reslist{columns:1}}
+  footer{margin-top:40px;color:var(--muted);font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="badge">Interactive · Frontend track</span>
+    <h1>AMPS for JavaScript Developers</h1>
+    <p class="lead">A hands-on intro to the Advanced Message Processing System — the real-time pub/sub engine you'll use to stream market data, orders, and trades into the browser. No prior experience needed. Scroll to the live blotter demo to <b>see</b> how it works.</p>
+  </header>
+
+  <h2>The 7 concepts you must own</h2>
+  <div class="grid concepts">
+    <div class="card"><h4>1 · Topic</h4><p>A named stream of messages (e.g. <code>ORDERS</code>). Publishers send to it; subscribers receive from it.</p></div>
+    <div class="card"><h4>2 · Message</h4><p>The payload — usually JSON for frontend work. Belongs to one topic + one message type.</p></div>
+    <div class="card"><h4>3 · Publish</h4><p>Sending a message to a topic. A backend service does this; you mostly consume.</p></div>
+    <div class="card"><h4>4 · Subscribe</h4><p>Registering interest in a topic. AMPS then pushes new matching messages to you, live.</p></div>
+    <div class="card"><h4>5 · Content filter</h4><p>A SQL-WHERE-like clause run on the server: <code>/Ticker='IBM' AND /Price&gt;100</code>.</p></div>
+    <div class="card"><h4>6 · State of the World</h4><p>A live "latest record per key" table AMPS maintains. Snapshot your UI instantly on load.</p></div>
+    <div class="card"><h4>7 · Command</h4><p>The low-level, fully-controllable API. <code>subscribe()</code>/<code>sow()</code> are shortcuts over it.</p></div>
+  </div>
+
+  <h2>Your 4-week learning plan</h2>
+  <div class="grid plan">
+    <div class="week"><div class="wk">Week 1</div><h4>Foundations &amp; first connect</h4>
+      <ul><li>Read pub/sub basics + intro guide</li><li>Watch the CEO concept talk</li><li>Write "Hello, World!" publisher</li></ul>
+      <div class="chk">✅ Explain pub/sub &amp; the URI format</div></div>
+    <div class="week"><div class="wk">Week 2</div><h4>Subscriptions &amp; filtering</h4>
+      <ul><li>Subscriptions + content filtering docs</li><li>Use <code>message.data</code> &amp; <code>header.command()</code></li><li>Render a live message list</li></ul>
+      <div class="chk">✅ Subscribe with a filter</div></div>
+    <div class="week"><div class="wk">Week 3</div><h4>State of the World</h4>
+      <ul><li>SOW + sowAndSubscribe docs</li><li>Handle group_begin/sow/p/oof</li><li>Build a self-updating table</li></ul>
+      <div class="chk">✅ Build a live blotter</div></div>
+    <div class="week"><div class="wk">Week 4</div><h4>Production &amp; real app</h4>
+      <ul><li>Error handling, HA, deltas, queues</li><li>Reconnect + lifecycle cleanup</li><li>Integrate into React/Angular</li></ul>
+      <div class="chk">✅ Ship a framework component</div></div>
+  </div>
+  <div class="note"><b>Ask your JPMC team lead for 4 things:</b> the dev <b>connection URI</b>, the <b>topic names + schemas</b>, which topics are <b>SOW-enabled</b>, and the <b>auth</b> mechanism. Those unlock everything else.</div>
+
+  <h2>Code you'll write — annotated</h2>
+
+  <h3>Connect &amp; publish</h3>
+  <pre><code><span class="tok-key">import</span> { Client } <span class="tok-key">from</span> <span class="tok-str">'amps'</span>
+
+<span class="tok-com">// transport :// host : port / amps / message-type</span>
+<span class="tok-key">const</span> uri = <span class="tok-str">'wss://127.0.0.1:9007/amps/json'</span>
+<span class="tok-key">const</span> client = <span class="tok-key">new</span> <span class="tok-fn">Client</span>(<span class="tok-str">'examplePublisher'</span>) <span class="tok-com">// unique name!</span>
+
+<span class="tok-key">await</span> client.<span class="tok-fn">connect</span>(uri)
+client.<span class="tok-fn">publish</span>(<span class="tok-str">'messages'</span>, { hi: <span class="tok-str">'Hello, World!'</span> })
+client.<span class="tok-fn">disconnect</span>()</code></pre>
+
+  <h3>Subscribe with a content filter</h3>
+  <pre><code><span class="tok-key">import</span> { Client, Command } <span class="tok-key">from</span> <span class="tok-str">'amps'</span>
+
+<span class="tok-key">const</span> <span class="tok-fn">onMessage</span> = message => <span class="tok-fn">render</span>(message.data)
+
+<span class="tok-key">const</span> cmd = <span class="tok-key">new</span> <span class="tok-fn">Command</span>(<span class="tok-str">'subscribe'</span>)
+  .<span class="tok-fn">topic</span>(<span class="tok-str">'ORDERS'</span>)
+  .<span class="tok-fn">filter</span>(<span class="tok-str">"/Ticker = 'IBM' AND /Price &gt; 100"</span>)
+
+<span class="tok-key">const</span> subId = <span class="tok-key">await</span> client.<span class="tok-fn">execute</span>(cmd, onMessage)</code></pre>
+
+  <h3>The dashboard pattern — sowAndSubscribe</h3>
+  <pre><code><span class="tok-key">const</span> rows = <span class="tok-key">new</span> <span class="tok-fn">Map</span>() <span class="tok-com">// your in-memory view, keyed by sowKey</span>
+
+<span class="tok-key">const</span> <span class="tok-fn">onMessage</span> = message => {
+  <span class="tok-key">const</span> cmd = message.header.<span class="tok-fn">command</span>()
+  <span class="tok-key">const</span> key = message.header.<span class="tok-fn">sowKey</span>()
+  <span class="tok-key">switch</span> (cmd) {
+    <span class="tok-key">case</span> <span class="tok-str">'sow'</span>:  <span class="tok-com">// snapshot record</span>
+    <span class="tok-key">case</span> <span class="tok-str">'p'</span>:    <span class="tok-com">// live insert/update</span>
+      rows.<span class="tok-fn">set</span>(key, message.data); <span class="tok-key">break</span>
+    <span class="tok-key">case</span> <span class="tok-str">'oof'</span>:  <span class="tok-com">// out-of-focus: no longer matches filter</span>
+      rows.<span class="tok-fn">delete</span>(key); <span class="tok-key">break</span>
+  }
+  <span class="tok-fn">renderTable</span>(rows)
+}
+
+<span class="tok-key">const</span> command = <span class="tok-key">new</span> <span class="tok-fn">Command</span>(<span class="tok-str">'sow_and_subscribe'</span>)
+  .<span class="tok-fn">topic</span>(<span class="tok-str">'orders'</span>).<span class="tok-fn">filter</span>(<span class="tok-str">"/status = 'OPEN'"</span>).<span class="tok-fn">options</span>(<span class="tok-str">'oof'</span>)
+
+<span class="tok-key">await</span> client.<span class="tok-fn">execute</span>(command, onMessage)</code></pre>
+
+  <h2>Live demo: a real-time order blotter</h2>
+  <p class="muted">This simulates exactly what the <code>sow_and_subscribe</code> code above does — no real server needed. Click <b>Start feed</b>: first you get the <span style="color:var(--accent)">SOW snapshot</span> of current OPEN orders, then live <span style="color:var(--accent2)">publish (p)</span> updates flash rows, and when an order is filled/cancelled it falls out of the <code>status='OPEN'</code> filter and AMPS sends an <span style="color:var(--warn)">oof</span> to drop it.</p>
+
+  <div class="demo">
+    <div class="controls">
+      <button id="startBtn">▶ Start feed</button>
+      <button id="stopBtn" class="ghost" disabled>⏸ Pause</button>
+      <button id="resetBtn" class="ghost">↺ Reset</button>
+      <div class="filterbox">subscribe&nbsp;<b>orders</b>&nbsp;where&nbsp;<b>/status = 'OPEN'</b></div>
+    </div>
+    <div class="demo-grid">
+      <div class="tablewrap">
+        <div class="tablehead"><span>Live order blotter</span><span class="pill open" id="rowCount">0 rows</span></div>
+        <table>
+          <thead><tr><th>Symbol</th><th>Side</th><th>Qty</th><th>Price</th><th>Status</th></tr></thead>
+          <tbody id="blotter"></tbody>
+        </table>
+      </div>
+      <div>
+        <div class="log" id="log"></div>
+        <div class="legend">
+          <span><i class="c-sow">sow</i> snapshot row</span>
+          <span><i class="c-p">p</i> live update</span>
+          <span><i class="c-oof">oof</i> dropped</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Resources (the official docs ARE the tutorial)</h2>
+  <div class="reslist">
+    <p><a href="https://crankuptheamps.com/clients/amps-client-javascript/first-program" target="_blank">Your First AMPS Program</a></p>
+    <p><a href="https://crankuptheamps.com/clients/amps-client-javascript/subscriptions" target="_blank">Subscriptions</a></p>
+    <p><a href="https://crankuptheamps.com/clients/amps-client-javascript/content-filtering" target="_blank">Content Filtering</a></p>
+    <p><a href="https://crankuptheamps.com/clients/amps-client-javascript/sow" target="_blank">State of the World</a></p>
+    <p><a href="https://devnull.crankuptheamps.com/documentation/api/js/5.3.4.0/api_reference" target="_blank">JS API Reference</a></p>
+    <p><a href="https://docs.crankuptheamps.com/intro/pub_sub" target="_blank">Pub/Sub basics</a></p>
+    <p><a href="https://www.youtube.com/watch?v=ju5NRXZG61w" target="_blank">Concept video (CEO talk)</a></p>
+    <p><a href="https://crankuptheamps.com/clients/amps-client-javascript" target="_blank">JS Client home</a></p>
+  </div>
+
+  <footer>There's no official AMPS video course — it's an enterprise product. Work the 4-week plan, build the blotter, and you'll be productive fast.</footer>
+</div>
+
+<script>
+(function(){
+  const SYMBOLS = ['AAPL','MSFT','IBM','GOOG','AMZN','JPM','TSLA','NVDA','META','GS'];
+  const SIDES = ['BUY','SELL'];
+  const blotter = document.getElementById('blotter');
+  const logEl = document.getElementById('log');
+  const rowCount = document.getElementById('rowCount');
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  let rows = new Map();   // sowKey -> order
+  let keySeq = 1;
+  let timer = null;
+  let started = false;
+
+  const rnd = (a,b)=>a+Math.random()*(b-a);
+  const price = ()=> (rnd(50,500)).toFixed(2);
+  const qty = ()=> Math.floor(rnd(1,50))*100;
+
+  function log(cmd, text){
+    const line = document.createElement('div');
+    line.className = 'line c-'+cmd;
+    line.textContent = '['+cmd+'] '+text;
+    logEl.insertBefore(line, logEl.firstChild);
+    while(logEl.childElementCount>120) logEl.removeChild(logEl.lastChild);
+  }
+
+  function renderTable(){
+    blotter.innerHTML='';
+    for(const [key,o] of rows){
+      const tr=document.createElement('tr');
+      if(o._flash){ tr.className='flash'; o._flash=false; }
+      tr.innerHTML='<td class="sym">'+o.symbol+'</td><td>'+o.side+
+        '</td><td>'+o.qty+'</td><td>'+o.price+'</td>'+
+        '<td><span class="pill open">'+o.status+'</span></td>';
+      blotter.appendChild(tr);
+    }
+    rowCount.textContent = rows.size+' row'+(rows.size===1?'':'s');
+  }
+
+  // ---- simulate AMPS message commands ----
+  function emitSow(o){ rows.set(o._key,o); log('sow', o.symbol+' '+o.side+' '+o.qty+' @ '+o.price); }
+  function emitPublishNew(){
+    const o={ _key:keySeq++, symbol:SYMBOLS[Math.floor(Math.random()*SYMBOLS.length)],
+      side:SIDES[Math.floor(Math.random()*2)], qty:qty(), price:price(), status:'OPEN', _flash:true };
+    rows.set(o._key,o);
+    log('p', 'NEW '+o.symbol+' '+o.side+' '+o.qty+' @ '+o.price);
+  }
+  function emitPublishUpdate(){
+    const keys=[...rows.keys()]; if(!keys.length) return;
+    const k=keys[Math.floor(Math.random()*keys.length)]; const o=rows.get(k);
+    o.price=price(); o.qty=qty(); o._flash=true;
+    log('p', 'UPD '+o.symbol+' -> '+o.qty+' @ '+o.price);
+  }
+  function emitOof(){
+    const keys=[...rows.keys()]; if(keys.length<3) return;
+    const k=keys[Math.floor(Math.random()*keys.length)]; const o=rows.get(k);
+    const reason = Math.random()<0.5?'FILLED':'CANCELLED';
+    rows.delete(k);
+    log('oof', o.symbol+' '+reason+' (left /status=OPEN filter)');
+  }
+
+  function snapshot(){
+    log('group_begin','--- Begin SOW snapshot ---');
+    const n=4+Math.floor(Math.random()*3);
+    for(let i=0;i<n;i++){
+      emitSow({ _key:keySeq++, symbol:SYMBOLS[Math.floor(Math.random()*SYMBOLS.length)],
+        side:SIDES[Math.floor(Math.random()*2)], qty:qty(), price:price(), status:'OPEN' });
+    }
+    log('group_end','--- End SOW snapshot ('+n+' rows) ---');
+    renderTable();
+  }
+
+  function tick(){
+    const r=Math.random();
+    if(r<0.45) emitPublishNew();
+    else if(r<0.8) emitPublishUpdate();
+    else emitOof();
+    renderTable();
+  }
+
+  function start(){
+    if(started){ // resume
+      timer=setInterval(tick,1100);
+    } else {
+      started=true; snapshot(); timer=setInterval(tick,1100);
+    }
+    startBtn.disabled=true; stopBtn.disabled=false;
+  }
+  function stop(){ clearInterval(timer); timer=null; startBtn.disabled=false; stopBtn.disabled=true; startBtn.textContent='▶ Resume feed'; }
+  function reset(){ stop(); rows=new Map(); keySeq=1; started=false; logEl.innerHTML=''; blotter.innerHTML=''; rowCount.textContent='0 rows'; startBtn.textContent='▶ Start feed'; }
+
+  startBtn.addEventListener('click',start);
+  stopBtn.addEventListener('click',stop);
+  resetBtn.addEventListener('click',reset);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMPS Playground — Learn by Playing</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --panel:#ffffff; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0;
+    --blue:#2563eb; --blue-d:#1e40af; --green:#16a34a; --green-bg:#dcfce7; --green-ink:#166534;
+    --red:#dc2626; --red-bg:#fee2e2; --red-ink:#991b1b; --amber:#d97706; --amber-bg:#fef3c7;
+    --violet:#7c3aed; --violet-bg:#ede9fe; --slate:#1e293b; --code:#0f172a;
+    --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.6}
+  .app{display:grid;grid-template-columns:268px 1fr;min-height:100vh;transition:grid-template-columns .2s ease}
+  body.sb-collapsed .app{grid-template-columns:76px 1fr}
+  .sb-head{display:flex;align-items:center;gap:8px}
+  .brand-ic{font-size:20px}
+  .brand-txt{flex:1;font-size:18px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden}
+  .brand-sub{font-size:11px;font-weight:500;color:#94a3b8;margin:3px 0 0 2px}
+  .sb-btn{width:30px;height:30px;flex:none;border:none;border-radius:7px;background:#2c3a4f;color:#cbd5e1;cursor:pointer;font-size:15px;line-height:1}
+  .sb-btn:hover{background:#3a4a63;color:#fff}
+  body.sb-collapsed aside{padding:18px 0;overflow-x:hidden}
+  body.sb-collapsed .sb-head{justify-content:center}
+  body.sb-collapsed .brand-ic,body.sb-collapsed .brand-txt,body.sb-collapsed .brand-sub{display:none}
+  body.sb-collapsed .navgroup{margin-top:10px}
+  body.sb-collapsed .navgroup .glabel{display:none}
+  body.sb-collapsed .navitem{justify-content:center;padding:10px 0;margin:2px 10px}
+  body.sb-collapsed .navitem span:not(.ic){display:none}
+  body.sb-collapsed aside .tip{display:none}
+  /* ---------- Sidebar ---------- */
+  aside{background:var(--slate);color:#e2e8f0;padding:22px 16px;position:sticky;top:0;height:100vh;overflow-y:auto}
+  aside .brand{font-size:19px;font-weight:800;color:#fff;padding-right:38px}
+  aside .brand small{display:block;font-size:11px;font-weight:500;color:#94a3b8;margin-top:2px}
+  .navgroup{margin-top:20px}
+  .navgroup .glabel{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#7c8aa0;margin:0 8px 8px;font-weight:700}
+  .navitem{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;
+    color:#cbd5e1;font-size:14px;transition:background .12s,color .12s;margin-bottom:2px}
+  .navitem:hover{background:#2c3a4f;color:#fff}
+  .navitem.active{background:var(--blue);color:#fff;font-weight:600}
+  .navitem .ic{width:22px;text-align:center;font-size:15px}
+  .navitem .num{margin-left:auto;font-size:11px;opacity:.6}
+  aside .tip{margin-top:22px;font-size:12px;color:#94a3b8;background:#0f1b2d;border:1px solid #2c3a4f;border-radius:8px;padding:10px}
+  /* ---------- Main ---------- */
+  main{padding:34px 40px 90px;max-width:none}
+  .lesson-head{margin-bottom:18px}
+  .kicker{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    color:var(--blue);background:#dbeafe;padding:3px 10px;border-radius:999px}
+  h1.title{font-size:28px;margin:12px 0 6px}
+  .subtitle{font-size:16px;color:var(--muted);margin:0}
+  .analogy{background:var(--violet-bg);border-left:4px solid var(--violet);border-radius:8px;padding:12px 16px;margin:18px 0;font-size:15px}
+  .analogy b{color:var(--violet)}
+  .analogy::before{content:"🎯 In simple words";display:block;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--violet);margin-bottom:5px}
+  h3.sec{font-size:16px;margin:26px 0 10px;color:var(--ink)}
+  p.body{font-size:15px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(15,23,42,.05);margin:16px 0}
+  .card h2{font-size:17px;margin:0 0 14px}
+  label.fld{display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--ink)}
+  input,select{width:100%;padding:8px 10px;border-radius:7px;border:1px solid #cbd5e1;font-size:14px;font-family:inherit;background:#fff}
+  .grid-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:16px}
+  .btn{padding:10px 18px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:filter .12s}
+  .btn:hover{filter:brightness(1.08)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.full{width:100%;padding:12px;font-size:15px}
+  .btn.ghost{background:#fff;color:var(--ink);border:1px solid #cbd5e1}
+  .btn.green{background:var(--green)}
+  .btn.amber{background:var(--amber)}
+  .btn.sm{padding:6px 12px;font-size:13px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+  .chip{padding:6px 12px;border-radius:999px;border:1px solid #cbd5e1;background:#fff;font-size:13px;cursor:pointer;transition:all .12s}
+  .chip:hover{border-color:var(--blue);color:var(--blue)}
+  /* code / json */
+  pre{background:var(--code);color:#e2e8f0;border-radius:9px;padding:14px 16px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.55;margin:0}
+  .j-key{color:#7dd3fc}.j-str{color:#86efac}.j-num{color:#fdba74}.j-bool{color:#f0abfc}.j-punc{color:#94a3b8}
+  code.inline{background:#eef2f7;padding:2px 6px;border-radius:5px;font-family:var(--mono);font-size:.9em;color:var(--blue-d)}
+  /* engine panel */
+  .engine{background:var(--slate);color:#e2e8f0;border-radius:12px;padding:18px}
+  .engine h2{color:#38bdf8}
+  .engine .sub{font-size:13px;color:#94a3b8;margin:0 0 12px}
+  /* subscriber dashboards */
+  .dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+  .dash{border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;background:#fff;transition:box-shadow .2s,border-color .2s}
+  .dash.hit{border-color:var(--green);box-shadow:0 0 0 2px rgba(22,163,74,.18)}
+  .dash-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .dash-top h4{margin:0;font-size:14px}
+  .tag{padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700}
+  .tag.on{background:var(--green-bg);color:var(--green-ink)}
+  .tag.off{background:var(--red-bg);color:var(--red-ink)}
+  .tag.wait{background:#e2e8f0;color:#64748b}
+  .filt{font-size:11.5px;color:var(--muted);margin:0 0 10px}
+  .screen{flex:1;background:#f1f5f9;border-radius:7px;padding:10px;font-family:var(--mono);font-size:12px;min-height:78px;white-space:pre-wrap}
+  .screen.live{background:#06240f;color:#86efac}
+  /* table */
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  td.click{cursor:pointer}
+  tr.row-hover:hover td{background:#f8fafc}
+  @keyframes flash{0%{background:#bfdbfe}100%{background:transparent}}
+  @keyframes flashg{0%{background:#bbf7d0}100%{background:transparent}}
+  @keyframes drop{0%{background:#fecaca}100%{opacity:0;transform:translateX(20px)}}
+  tr.flash td{animation:flash 1.1s ease-out}
+  tr.flashg td{animation:flashg 1.1s ease-out}
+  tr.drop td{animation:drop 1s ease-out forwards}
+  .pill{font-size:11px;padding:2px 8px;border-radius:999px}
+  .pill.open{background:var(--green-bg);color:var(--green-ink)}
+  .pill.b{background:#dbeafe;color:#1e40af}.pill.s{background:#fee2e2;color:#991b1b}
+  /* note boxes */
+  .note{border-radius:8px;padding:12px 16px;font-size:14px;margin:14px 0}
+  .note::before{content:"📝 Note";display:block;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;opacity:.8}
+  .note.bare::before{content:none}
+  .tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .tab{padding:7px 16px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;cursor:pointer;font-size:13px;font-weight:600}
+  .tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .srv{border:2px solid;border-radius:10px;padding:14px;text-align:center;transition:all .3s;font-size:14px}
+  .srv.up{border-color:var(--green);background:var(--green-bg)}
+  .srv.down{border-color:var(--red);background:var(--red-bg);opacity:.55}
+  .srv.standby{border-color:#cbd5e1;background:#f8fafc}
+  .ent-ok{color:var(--green-ink);font-weight:700}.ent-no{color:var(--red-ink);font-weight:700}
+  .note.blue{background:#dbeafe;border-left:4px solid var(--blue)}
+  .note.green{background:var(--green-bg);border-left:4px solid var(--green)}
+  .note.amber{background:var(--amber-bg);border-left:4px solid var(--amber)}
+  .kv{display:flex;gap:8px;font-size:13px;padding:4px 0}
+  .kv .k{color:var(--muted);min-width:120px}
+  /* flow animation */
+  .flow{position:relative;height:200px;margin:10px 0}
+  .node{position:absolute;border-radius:10px;padding:10px 12px;font-size:13px;font-weight:600;text-align:center;border:2px solid}
+  .node.pub{left:0;top:78px;background:var(--violet-bg);border-color:var(--violet);color:var(--violet)}
+  .node.eng{left:50%;top:64px;transform:translateX(-50%);background:#dbeafe;border-color:var(--blue);color:var(--blue-d);width:150px}
+  .node.sub{right:0;background:var(--green-bg);border-color:var(--green);color:var(--green-ink);width:130px}
+  .node.s1{top:8px}.node.s2{top:78px}.node.s3{top:148px}
+  .dot{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--blue);top:84px;left:120px;opacity:0}
+  /* modal */
+  .modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+  .modal-bg.show{display:flex}
+  .modal{background:#fff;border-radius:14px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;padding:22px}
+  .modal h3{margin:0 0 4px}
+  .modal .x{float:right;cursor:pointer;font-size:22px;color:var(--muted);line-height:1}
+  .fieldrow{padding:8px 0;border-bottom:1px dashed var(--line)}
+  .fieldrow .fn{font-family:var(--mono);font-size:13px;color:var(--blue-d);font-weight:700}
+  .fieldrow .fv{font-family:var(--mono);font-size:13px;color:var(--ink)}
+  .fieldrow .fd{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .hint{font-size:12px;color:var(--muted);font-style:italic}
+  .wire{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0}
+  .bar{height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;transition:width .5s}
+  .progress{font-size:13px;font-weight:600}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+  @media(max-width:820px){.app{grid-template-columns:1fr}aside{position:static;height:auto}main{padding:24px 18px 70px}}
+  .quizopt{display:block;width:100%;text-align:left;margin-bottom:8px;padding:12px 14px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;font-size:14px;cursor:pointer;transition:all .12s}
+  .quizopt:hover:not(:disabled){border-color:var(--blue);background:#f8fafc}
+  .quizopt:disabled{cursor:default}
+  .cheat-cols{column-count:2;column-gap:20px}
+  .cheat-box{break-inside:avoid;border:1px solid var(--line);border-radius:9px;padding:12px 14px;margin-bottom:14px}
+  .cheat-box h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--blue)}
+  .cheat-box ul{margin:4px 0;padding-left:16px;font-size:13px}
+  .cheat-box pre{font-size:11.5px}
+  @media print{
+    aside{display:none!important}.app{display:block}main{max-width:100%;padding:0}
+    .modal-bg{display:none!important}.btn{display:none!important}.lesson-head .kicker{display:none}
+    .cheat-cols{column-count:2}
+  }
+  @media(max-width:760px){.cheat-cols{column-count:1}}
+</style>
+</head>
+<body>
+<h2 class="sr-only">AMPS interactive learning playground covering pub/sub, topics, messages, publishing, subscribing, content filtering, state of the world, commands, out-of-focus, delta messaging, transaction log replay, and queues.</h2>
+<div class="app">
+  <aside>
+    <div class="sb-head">
+      <span class="brand-ic">⚡</span>
+      <span class="brand-txt">AMPS Playground</span>
+      <button class="sb-btn" onclick="this.innerHTML=document.body.classList.toggle('sb-collapsed')?'»':'«'" title="Toggle menu">«</button>
+    </div>
+    <div class="brand-sub">Learn by clicking &amp; playing</div>
+    <div class="navgroup">
+      <div class="glabel">Core concepts (the 7)</div>
+      <div id="nav-core"></div>
+    </div>
+    <div class="navgroup">
+      <div class="glabel">Power features</div>
+      <div id="nav-adv"></div>
+    </div>
+    <div class="navgroup">
+      <div class="glabel">Going to production</div>
+      <div id="nav-prod"></div>
+    </div>
+    <div class="navgroup">
+      <div class="glabel">Review &amp; test</div>
+      <div id="nav-review"></div>
+    </div>
+    <div class="tip">💡 Tip: click any <b>message or table row</b> to pop open its full payload with plain-English field notes.</div>
+  </aside>
+  <main id="main"></main>
+</div>
+
+<!-- payload modal -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <span class="x" id="modalX">&times;</span>
+    <h3 id="modalTitle">Message payload</h3>
+    <p class="hint" id="modalSub">Every field, explained simply.</p>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   SHARED DATA + HELPERS
+   ========================================================================= */
+const FIELD_DOCS = {
+  MsgType:"What kind of message this is. 'TRADE' means a trade just happened.",
+  Symbol:"The stock ticker, e.g. AAPL = Apple, GE = General Electric.",
+  ExchangeID:"Which market the trade happened on (NASDAQ or NYSE).",
+  TradePrice:"The price ($) one share traded at.",
+  TradeSize:"How many shares changed hands. Big size = a 'block' trade.",
+  TradeSide:"'B' = a Buy, 'S' = a Sell.",
+  SourceTimestamp_ns:"Exact time of the trade in nanoseconds — banks care about microsecond timing.",
+  Derived:"Extra numbers AMPS or the feed calculated for you.",
+  TodayVWAP:"Volume-Weighted Average Price — the average price weighted by volume so far today.",
+  TotalDayVolume:"Total shares of this stock traded today across the market.",
+  status:"Order lifecycle state: OPEN, FILLED, or CANCELLED.",
+  orderId:"Unique ID for this order.",
+  trader:"Who placed the order.",
+  qty:"Number of shares on the order.",
+  notional:"Total dollar value = price x quantity.",
+  RiskBook:"The desk/book this risk number belongs to.",
+  VaR:"Value at Risk — an estimate of possible loss.",
+  PnL:"Profit and Loss for the position."
+};
+
+const SCENARIOS = {
+  aapl:{MsgType:"TRADE",Symbol:"AAPL",ExchangeID:"NASDAQ",TradePrice:192.45,TradeSize:2500,TradeSide:"B",
+        SourceTimestamp_ns:1718483076123456789,Derived:{TodayVWAP:192.12,TotalDayVolume:15600000}},
+  nyse:{MsgType:"TRADE",Symbol:"GE",ExchangeID:"NYSE",TradePrice:165.20,TradeSize:15000,TradeSide:"S",
+        SourceTimestamp_ns:1718483078987654321,Derived:{TodayVWAP:164.85,TotalDayVolume:8900000}},
+  block:{MsgType:"TRADE",Symbol:"AAPL",ExchangeID:"NASDAQ",TradePrice:193.10,TradeSize:55000,TradeSide:"B",
+        SourceTimestamp_ns:1718483081112233445,Derived:{TodayVWAP:192.45,TotalDayVolume:16200000}}
+};
+
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+/* pretty-print JSON with color classes */
+function jsonHTML(obj,indent=0){
+  const pad='  '.repeat(indent+1), padEnd='  '.repeat(indent);
+  if(obj===null) return '<span class="j-bool">null</span>';
+  if(typeof obj==='number') return '<span class="j-num">'+obj+'</span>';
+  if(typeof obj==='boolean') return '<span class="j-bool">'+obj+'</span>';
+  if(typeof obj==='string') return '<span class="j-str">"'+esc(obj)+'"</span>';
+  if(Array.isArray(obj)){
+    if(!obj.length) return '<span class="j-punc">[]</span>';
+    return '<span class="j-punc">[</span>\n'+obj.map(v=>pad+jsonHTML(v,indent+1)).join('<span class="j-punc">,</span>\n')+'\n'+padEnd+'<span class="j-punc">]</span>';
+  }
+  const keys=Object.keys(obj);
+  if(!keys.length) return '<span class="j-punc">{}</span>';
+  return '<span class="j-punc">{</span>\n'+keys.map(k=>
+    pad+'<span class="j-key">"'+k+'"</span><span class="j-punc">: </span>'+jsonHTML(obj[k],indent+1)
+  ).join('<span class="j-punc">,</span>\n')+'\n'+padEnd+'<span class="j-punc">}</span>';
+}
+
+/* modal: show a payload with field-by-field plain-English notes */
+function openPayload(title, obj, sub){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalSub').textContent=sub||"Every field, explained simply.";
+  const body=document.getElementById('modalBody');
+  let html='<pre style="margin-bottom:16px">'+jsonHTML(obj)+'</pre>';
+  const walk=(o)=>{Object.keys(o).forEach(k=>{
+    const v=o[k];
+    if(v && typeof v==='object' && !Array.isArray(v)){
+      if(FIELD_DOCS[k]) html+=row(k,'{ … }');
+      walk(v);
+    } else {
+      html+=row(k, typeof v==='string'?'"'+v+'"':v);
+    }
+  });};
+  const row=(k,v)=>FIELD_DOCS[k]
+    ? '<div class="fieldrow"><span class="fn">'+k+'</span> <span class="fv">= '+esc(v)+'</span><div class="fd">'+FIELD_DOCS[k]+'</div></div>'
+    : '';
+  walk(obj);
+  body.innerHTML=html;
+  document.getElementById('modalBg').classList.add('show');
+}
+document.getElementById('modalX').onclick=()=>document.getElementById('modalBg').classList.remove('show');
+document.getElementById('modalBg').onclick=e=>{if(e.target.id==='modalBg')e.currentTarget.classList.remove('show');};
+
+/* ---------- Global hover tooltip (reliable, supports rich HTML via data-tip) ---------- */
+(function(){
+  const TIP=document.createElement('div');TIP.id='gtip';
+  TIP.style.cssText='position:fixed;z-index:200;max-width:360px;background:#0f172a;color:#e2e8f0;border:1px solid #3b82f6;border-radius:9px;padding:10px 12px;font-size:12.5px;line-height:1.55;box-shadow:0 12px 32px rgba(0,0,0,.45);pointer-events:none;display:none';
+  document.body.appendChild(TIP);
+  let cur=null;
+  const pos=e=>{let x=e.clientX+14,y=e.clientY+16;const w=TIP.offsetWidth,h=TIP.offsetHeight;if(x+w>innerWidth-10)x=e.clientX-w-12;if(y+h>innerHeight-10)y=e.clientY-h-14;if(x<6)x=6;if(y<6)y=6;TIP.style.left=x+'px';TIP.style.top=y+'px';};
+  document.addEventListener('mouseover',e=>{const t=e.target.closest&&e.target.closest('[data-tip]');if(t){cur=t;TIP.innerHTML=t.getAttribute('data-tip');TIP.style.display='block';pos(e);}else if(cur){TIP.style.display='none';cur=null;}});
+  document.addEventListener('mousemove',e=>{if(cur)pos(e);});
+})();
+
+/* =========================================================================
+   CONCEPTS — each has: id, group, icon, title, sub, render(), init()
+   ========================================================================= */
+const CONCEPTS=[];
+const C=(o)=>CONCEPTS.push(o);
+
+/* ---------- 1. PUB/SUB ---------- */
+C({id:'pubsub',group:'core',icon:'📡',title:'Publish / Subscribe',sub:'The firehose: senders and receivers who never meet.',
+render:()=>`
+  <div class="analogy">📺 <b>Think YouTube.</b> A creator uploads a video to their channel. They have no idea who's watching. You subscribed, so it just shows up for you. AMPS is YouTube; the "channel" is a <b>topic</b>; the creator is a <b>publisher</b>; you are a <b>subscriber</b>.</div>
+  <p class="body">In a trading app, a <span class="gloss">price feed<span class="tt"><b>Price feed:</b> a service (run by the exchange or a data vendor like Bloomberg/Refinitiv) that continuously streams the latest prices as trades happen. In this demo it's the "Publisher / Market feed" — the source of the data.</span></span> <b>publishes</b> a trade once. AMPS instantly <b>pushes</b> it to every screen that <b>subscribed</b>. Picture a <span class="gloss">firehose<span class="tt"><b>Firehose:</b> a huge, non-stop blast of messages — often thousands per second. You don't ask for each one; you tap into the stream and the data just keeps flooding in. The word is about sheer volume and continuousness.</span></span> of messages about each <span class="gloss">symbol<span class="tt"><b>Symbol:</b> the short ticker code for a stock — AAPL = Apple, GE = General Electric, MSFT = Microsoft. It's the name tag on the trade so you know which stock it's about.</span></span>. The publisher never asks "who's listening?" — it just throws the message at the topic and moves on.</p>
+  <p class="hint">👆 Hover the <span class="gloss">underlined words<span class="tt">Like this! Dashed-underlined words have a plain-English tooltip on hover.</span></span> for a quick definition.</p>
+  <style>
+    @keyframes dashflow{to{stroke-dashoffset:-24}}
+    .amps-line{stroke-dasharray:6 6;transition:stroke .3s}
+    .amps-line.flowing{animation:dashflow .8s linear infinite}
+    .stage-node{position:absolute;width:150px;height:82px;background:#1e2029;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+    .stage-node .nt{font-weight:700;font-size:15px;color:#fff}
+    .stage-node .ns{font-size:10.5px;color:#9aa3b2;margin-top:3px;text-align:center;padding:0 4px}
+    .gate{position:absolute;width:108px;height:40px;background:#15151A;border:1.5px solid #3a3a44;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#cbd5e1;text-align:center;padding:0 4px;line-height:1.2;transition:all .3s}
+    .dctrl{display:flex;align-items:center;margin-bottom:12px}
+    .dctrl .lbl{width:120px;color:#cbd5e1;font-size:14px}
+    .dctrl input,.dctrl select{flex:1;background:#15151A;color:#fff;border:1px solid #2a2a33;border-radius:8px;padding:10px;font-family:var(--mono);outline:none}
+    .stepper{flex:1;display:flex;gap:8px}
+    .stepper .sv{flex:1;background:#15151A;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--mono);font-size:15px}
+    .stepper button{width:52px;background:#15151A;border:none;border-radius:8px;color:#9aa3b2;font-size:20px;cursor:pointer}
+    .stepper button:hover{background:#22222b;color:#fff}
+    .psc{background:#15151A;color:#cbd5e1;border:1px solid #2a2a33;border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer}
+    .psc:hover{border-color:#3b82f6;color:#fff}
+    .gloss{border-bottom:1.5px dashed var(--violet);cursor:help;position:relative;font-weight:600}
+    .gloss .tt{visibility:hidden;opacity:0;transition:opacity .15s;position:absolute;left:0;bottom:150%;width:250px;background:#1e293b;color:#e2e8f0;border:1px solid var(--blue);border-radius:8px;padding:9px 11px;font-size:12.5px;font-weight:400;line-height:1.45;z-index:30;box-shadow:0 8px 20px rgba(0,0,0,.35)}
+    .gloss:hover .tt{visibility:visible;opacity:1}
+    .chain{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap;margin:12px 0}
+    .chain .step{flex:1;min-width:130px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+    .chain .step h5{margin:0 0 4px;font-size:13px}
+    .chain .step p{margin:0;font-size:12px;color:var(--muted)}
+    .chain .arrow{display:flex;align-items:center;color:#94a3b8;font-size:20px}
+    .flowchip{position:absolute;font-size:9.5px;color:#86efac;background:#0E0E12;padding:2px 6px;border:1px solid #2a2a33;border-radius:6px;z-index:6;cursor:help}
+    .fcip{display:none;position:absolute;left:0;top:130%;width:210px;background:#0b0e13;border:1px solid #3b82f6;border-radius:8px;padding:9px 10px;z-index:40;font-family:var(--mono);font-size:10px;line-height:1.5;color:#e2e8f0;box-shadow:0 8px 22px rgba(0,0,0,.45);white-space:pre}
+    .flowchip:hover .fcip{display:block}
+    .ctrl-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(250px,1fr);gap:28px;align-items:start;margin-top:6px}
+    .ctrl-right{position:sticky;top:14px}
+    .sec-h{color:#fff;font-weight:700;margin:0 0 10px}
+    .dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px 14px;margin-bottom:4px}
+    .dgrid .dctrl{flex-direction:column;align-items:stretch;gap:5px;margin-bottom:0}
+    .dgrid .dctrl .lbl{width:auto}
+    @media(max-width:900px){.ctrl-grid{grid-template-columns:1fr}.ctrl-right{position:static}}
+  </style>
+  <div class="card" style="background:#0E0E12;border-color:#23232c;position:relative">
+    <button id="ps_stop" style="display:none;position:absolute;top:16px;right:16px;background:#3a2020;color:#fca5a5;border:1px solid #fb7185;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;z-index:10">⏸ Stop flow</button>
+    <h2 style="color:#fff">▶ Publish a trade and watch it flow</h2>
+    <p class="hint" style="color:#8b93a3">Pick a preset (or set the fields yourself), hit <b>Publish</b>, and watch the message travel. Each subscriber's <b>🔎 filter lives inside the AMPS engine</b> — watch it <span style="color:#4ade80">open ✓ (deliver)</span> or <span style="color:#fb7185">block ✗ (filter out)</span>. Hover the green <b>→ topic</b> label to see the full message.</p>
+    <div style="overflow-x:auto">
+      <svg viewBox="0 0 1200 360" role="img" style="width:100%;height:auto;display:block;min-width:660px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+        <title>Publish/subscribe flow: a publisher sends a message to a topic; inside the AMPS engine each subscriber's content filter decides who receives it.</title>
+        <defs>
+          <marker id="arrB" markerWidth="8" markerHeight="8" refX="6.5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#60a5fa"/></marker>
+          <marker id="arrG" markerWidth="8" markerHeight="8" refX="6.5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#4ade80"/></marker>
+          <marker id="arrX" markerWidth="8" markerHeight="8" refX="6.5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3a3a44"/></marker>
+        </defs>
+        <path id="pPE" class="amps-line" d="M232,182 L424,182" fill="none" stroke="#3a3a44" stroke-width="2.5" marker-end="url(#arrX)"/>
+        <path id="g2tA" class="amps-line" d="M766,170 L948,170" fill="none" stroke="#3a3a44" stroke-width="2.5" marker-end="url(#arrX)"/>
+        <path id="g2tB" class="amps-line" d="M766,230 L948,230" fill="none" stroke="#3a3a44" stroke-width="2.5" marker-end="url(#arrX)"/>
+        <path id="g2tC" class="amps-line" d="M766,290 L948,290" fill="none" stroke="#3a3a44" stroke-width="2.5" marker-end="url(#arrX)"/>
+        <rect x="20" y="142" width="210" height="80" rx="12" fill="#1e2029" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="125" y="176" text-anchor="middle" fill="#fff" font-size="16" font-weight="700">📤 Publisher</text>
+        <text x="125" y="198" text-anchor="middle" fill="#9aa3b2" font-size="12"><tspan id="pubName">Market Data Feed</tspan></text>
+        <g style="cursor:help"><title id="flowTip"></title>
+          <rect x="268" y="171" width="120" height="22" rx="6" fill="#0E0E12" stroke="#2a2a33"/>
+          <text id="flowLabel" x="328" y="186" text-anchor="middle" fill="#86efac" font-size="11">→ MARKET_DATA</text>
+        </g>
+        <rect x="430" y="24" width="336" height="322" rx="14" fill="#1e2029" stroke="#818cf8" stroke-width="1.5"/>
+        <text x="598" y="54" text-anchor="middle" fill="#fff" font-size="16" font-weight="700">⚡ AMPS Engine</text>
+        <rect x="450" y="68" width="296" height="30" rx="6" fill="#15151A"/>
+        <text x="463" y="88" fill="#cbd5e1" font-size="12">📂 Topic: <tspan id="engTopic" fill="#fff" font-weight="600">MARKET_DATA</tspan></text>
+        <text x="450" y="120" fill="#8b93a3" font-size="10.5">🔎 Content filters — each subscriber sets its own;</text>
+        <text x="450" y="134" fill="#8b93a3" font-size="10.5">they are stored &amp; run inside the engine:</text>
+        <rect id="gA" x="450" y="150" width="296" height="40" rx="8" fill="#15151A" stroke="#3a3a44" stroke-width="1.5"/>
+        <text id="gAt" x="466" y="175" fill="#cbd5e1" font-size="12">🔎 A · no filter</text>
+        <rect id="gB" x="450" y="210" width="296" height="40" rx="8" fill="#15151A" stroke="#3a3a44" stroke-width="1.5"/>
+        <text id="gBt" x="466" y="235" fill="#cbd5e1" font-size="12">🔎 B · Symbol = AAPL</text>
+        <rect id="gC" x="450" y="270" width="296" height="40" rx="8" fill="#15151A" stroke="#3a3a44" stroke-width="1.5"/>
+        <text id="gCt" x="466" y="295" fill="#cbd5e1" font-size="12">🔎 C · price &gt; 190</text>
+        <rect x="952" y="147" width="228" height="46" rx="10" fill="#1e2029" stroke="#4ade80" stroke-width="1.5"/>
+        <text x="968" y="166" fill="#fff" font-size="13" font-weight="700">🖥️ Trader A</text>
+        <text x="968" y="183" fill="#9aa3b2" font-size="10.5">gets ALL (no filter)</text>
+        <rect x="952" y="207" width="228" height="46" rx="10" fill="#1e2029" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="968" y="226" fill="#fff" font-size="13" font-weight="700">🖥️ Trader B</text>
+        <text x="968" y="243" fill="#9aa3b2" font-size="10.5"><tspan id="bWant">wants AAPL</tspan></text>
+        <rect x="952" y="267" width="228" height="46" rx="10" fill="#1e2029" stroke="#fb7185" stroke-width="1.5"/>
+        <text x="968" y="286" fill="#fff" font-size="13" font-weight="700">🖥️ Trader C</text>
+        <text x="968" y="303" fill="#9aa3b2" font-size="10.5">wants a price</text>
+      </svg>
+    </div>
+    <div style="display:flex;gap:18px;justify-content:center;font-size:12px;color:#9aa3b2;margin:6px 0 18px">
+      <span>● <span style="color:#60a5fa">Flowing</span></span><span>● <span style="color:#4ade80">Delivered</span></span><span>● <span style="color:#fb7185">Filtered</span></span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);text-align:center;border-top:1px solid #23232c;border-bottom:1px solid #23232c;padding:14px 0;margin-bottom:18px">
+      <div><div style="color:#cbd5e1;font-size:13px;margin-bottom:4px">Trader A</div><div id="rA" style="font-family:var(--mono);color:#64748b">—</div></div>
+      <div><div style="color:#cbd5e1;font-size:13px;margin-bottom:4px">Trader B</div><div id="rB" style="font-family:var(--mono);color:#64748b">—</div></div>
+      <div><div style="color:#cbd5e1;font-size:13px;margin-bottom:4px">Trader C</div><div id="rC" style="font-family:var(--mono);color:#64748b">—</div></div>
+    </div>
+    <div class="ctrl-grid">
+      <div class="ctrl-left">
+        <p class="sec-h">① Who sends it &amp; where</p>
+        <div class="dgrid">
+          <div class="dctrl"><div class="lbl">Publisher</div><select id="ps_pub"><option value="MARKET_DATA">Market Data Feed</option><option value="ORDERS">Order Mgmt System</option><option value="TRADES">Trade Capture</option></select></div>
+          <div class="dctrl"><div class="lbl">Topic</div><select id="ps_topic"><option>MARKET_DATA</option><option>ORDERS</option><option>TRADES</option><option>RISK</option><option>NEWS</option></select></div>
+        </div>
+        <p class="sec-h" style="margin-top:20px">② The message to publish</p>
+        <p class="hint" style="color:#8b93a3;margin:0 0 8px">Quick presets:</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+          <button class="psc" data-sc="aapl">AAPL Mid-Day Tick</button>
+          <button class="psc" data-sc="nyse">Large NYSE Sell</button>
+          <button class="psc" data-sc="block">NASDAQ Block Buy</button>
+          <button class="psc" data-sc="fx">EUR/USD FX Tick</button>
+        </div>
+        <datalist id="symlist"><option>AAPL</option><option>MSFT</option><option>GE</option><option>TSLA</option><option>JPM</option><option>NVDA</option><option>AMZN</option><option>META</option><option>GOOG</option><option>GS</option><option>BAC</option><option>EUR/USD</option><option>GBP/USD</option><option>USD/JPY</option></datalist>
+        <div class="dgrid">
+          <div class="dctrl"><div class="lbl">Symbol</div><input id="ps_sym" list="symlist" value="AAPL" placeholder="type or pick…"></div>
+          <div class="dctrl"><div class="lbl">Exchange</div><select id="ps_ex"><option>NASDAQ</option><option>NYSE</option><option>LSE</option><option>TSE</option><option>HKEX</option><option>EURONEXT</option><option>FX</option></select></div>
+          <div class="dctrl"><div class="lbl">Currency</div><select id="ps_cur"><option>USD</option><option>EUR</option><option>GBP</option><option>JPY</option><option>HKD</option></select></div>
+          <div class="dctrl"><div class="lbl">Price</div><input id="ps_price" type="number" step="0.01" value="192.45"></div>
+          <div class="dctrl"><div class="lbl">Quantity</div><input id="ps_qty" type="number" step="100" value="2500"></div>
+          <div class="dctrl"><div class="lbl">Side</div><select id="ps_sd"><option value="B">Buy</option><option value="S">Sell</option></select></div>
+        </div>
+        <p class="sec-h" style="margin-top:22px">③ Each subscriber's filter <span style="font-weight:400;color:#8b93a3;font-size:13px">— this is how a filter gets set</span></p>
+        <p class="hint" style="color:#8b93a3;margin:0 0 10px">A subscriber writes a filter when it subscribes; AMPS then only delivers messages that match. Edit B or C below and watch their gate change.</p>
+        <div class="dctrl"><div class="lbl">Trader A</div><div style="flex:1;color:#86efac;font-family:var(--mono);font-size:12.5px;padding:6px 0">no filter — subscribes to the whole topic (gets everything)</div></div>
+        <div class="dctrl"><div class="lbl">Trader B</div><div style="flex:1;display:flex;gap:6px;align-items:center;color:#cbd5e1;font-family:var(--mono);font-size:13px">/Symbol = <input id="ps_bsym" list="symlist" value="AAPL" style="flex:1"></div></div>
+        <div class="dctrl"><div class="lbl">Trader C</div><div style="flex:1;display:flex;gap:6px;align-items:center;color:#cbd5e1;font-family:var(--mono);font-size:13px">/Price <select id="ps_op" style="width:64px;flex:none"><option value=">">&gt;</option><option value="<">&lt;</option><option value="=">=</option></select><input id="ps_val" type="number" step="10" value="190" style="flex:1"></div></div>
+      </div>
+      <div class="ctrl-right">
+        <p class="hint" style="color:#8b93a3;margin:0 0 6px">📄 The exact message that gets published:</p>
+        <pre id="ps_msg" style="font-size:12px;margin:0"></pre>
+        <p class="hint" style="color:#8b93a3;margin:12px 0 0">Hover the green <b style="color:#86efac">→ topic</b> label on the diagram to see this too.</p>
+      </div>
+    </div>
+    <button id="ps_go" style="width:100%;margin-top:18px;background:#26262F;color:#fff;border:1px solid #333;border-radius:999px;padding:14px;font-size:15px;font-weight:600;cursor:pointer">Publish update 📤</button>
+  </div>
+
+  <h3 class="sec">🧩 What each block does</h3>
+  <div class="chain">
+    <div class="step"><h5>1 · Publisher</h5><p>A <b>software service that sends messages</b> — here the market-data feed. (On WhatsApp: "whoever posts" in the group.) Has no idea who's listening.</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><h5>2 · Topic</h5><p>The <b>group chat's name</b>, e.g. <code class="inline">MARKET_DATA</code>. The publisher posts into it; whoever joined receives it. Pick a different one from the Topic dropdown.</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><h5>3 · AMPS Engine</h5><p>Receives the message, checks it against each subscriber's filter, and routes it onward.</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><h5>4 · Subscriber</h5><p>Your browser app (Trader A / B / C). Receives the message if it matches <i>that</i> subscriber's filter.</p></div>
+  </div>
+  <div class="note bare" style="background:#f8fafc;border:1px solid var(--line)">
+    <p style="margin:0 0 8px"><b>📤 Who is the "publisher"?</b> Any <b>system that sends messages</b> — never a person. In a bank: a <b>market-data feed</b> (prices), an <b>order management system</b> (orders), a <b>trade-capture</b> service (executions), a <b>pricing engine</b>, a <b>news feed</b>. Like a WhatsApp group, the publisher is just "whoever posts" — usually a bot/service. Switch it with the <b>Publisher</b> dropdown and watch the name on the diagram change.</p>
+    <p style="margin:0"><b>📂 Topics (group chats) a bank uses:</b> <code class="inline">MARKET_DATA</code> (prices), <code class="inline">ORDERS</code> (orders placed), <code class="inline">TRADES</code> (completed deals), <code class="inline">RISK</code> (risk numbers), <code class="inline">NEWS</code> (headlines), <code class="inline">POSITIONS</code> (holdings). <a href="#" onclick="go('topic');return false" style="color:var(--blue);font-weight:600">Open the full Topic lesson →</a></p>
+  </div>
+  <div class="note bare blue" style="background:#dbeafe;border-left:4px solid var(--blue)"><b>Where does the content filter sit? Think of a post office. 📮</b> The feed hands AMPS one "newspaper" (the trade). Each subscriber gave the post office a standing instruction: Trader A says <i>"give me everything"</i>, Trader B says <i>"only the AAPL section"</i>, Trader C says <i>"only if the price beats my number."</i> The <b>rule belongs to each subscriber</b> (each one writes it when subscribing), but the <b>post office — the AMPS engine — stores and runs it</b> and delivers only to whoever matches. <b>You had it exactly right:</b> each trader <i>sets</i> its own filter, but the filter <i>lives and runs inside the AMPS engine</i> — which is why the three filters now sit <b>inside the engine block</b> above, one per subscriber (not one shared box). You set them in step ③ below; the engine is where they actually execute. Nothing is filtered in your browser.</div>
+
+  <div class="note green">📌 <b>The key idea, stated precisely:</b> the subscriber <b>writes its own filter</b> (it's part of the <code class="inline">subscribe</code> command the client sends), but the filter is <b>stored and evaluated inside the AMPS engine, on the server</b>. Nothing is filtered in the browser. So "each trader sets their content filter, but it sits/runs inside AMPS" is precisely correct — and that's exactly why AMPS is fast and bandwidth-efficient: the engine does the filtering <i>before</i> anything crosses the network to you.</div>
+
+  <h3 class="sec">🖥️ What each trader is doing</h3>
+  <div class="dash-grid">
+    <div class="dash"><div class="dash-top"><h4>Trader A</h4><span class="tag on">no filter</span></div><p style="font-size:13px;margin:0;color:var(--muted)">Subscribed to the whole topic, so it gets <b>every</b> message. This is <b>pure pub/sub</b> — its line is always green.</p></div>
+    <div class="dash"><div class="dash-top"><h4>Trader B</h4><span class="tag wait">filter</span></div><p style="font-size:13px;margin:0;color:var(--muted)">Only wants Apple: <code class="inline">/Symbol = 'AAPL'</code>. Delivered only when the symbol is AAPL — try the "Large NYSE Sell" preset (it's GE) and watch B go red.</p></div>
+    <div class="dash"><div class="dash-top"><h4>Trader C</h4><span class="tag wait">filter</span></div><p style="font-size:13px;margin:0;color:var(--muted)">Watches a price threshold you set: <code class="inline">price <span id="tcLabel2">&gt; 190</span></code>. Change the op/value or price and watch C flip between delivered and filtered.</p></div>
+  </div>
+
+  <div class="note green"><b>Read the three traders this way:</b> <b>Trader A</b> is plain pub/sub — subscribed to the topic, so it gets <i>every</i> message. <b>Traders B & C</b> add a <b>content filter</b> (that's concept #6 — we go deeper there), so the same message reaches them only if it matches. One publish, three different outcomes — and the publisher did nothing special for any of them. Notice the message also carries <b>Exchange</b> and <b>Side</b>: those just ride along, and any trader could filter on them too.</div>
+`,init:()=>{
+  const g=id=>document.getElementById(id);
+  const num=id=>parseFloat(g(id).value)||0;
+  const lines={pPE:g('pPE'),g2tA:g('g2tA'),g2tB:g('g2tB'),g2tC:g('g2tC')};
+  const MK={'#60a5fa':'url(#arrB)','#4ade80':'url(#arrG)','#3a3a44':'url(#arrX)','#fb7185':'url(#arrX)'};
+  const setLine=(el,color,flow)=>{el.setAttribute('stroke',color);el.setAttribute('marker-end',MK[color]||'url(#arrX)');el.classList.toggle('flowing',!!flow);};
+  const setRes=(id,txt)=>{const e=g(id);e.textContent=txt;e.style.color=txt==='Delivered'?'#4ade80':txt==='Filtered'?'#fb7185':'#94a3b8';};
+  const opSym=()=>g('ps_op').value==='>'?'&gt;':g('ps_op').value==='<'?'&lt;':'=';
+  const bSym=()=>g('ps_bsym').value.toUpperCase();
+  const ruleB=()=>'B · Symbol = '+bSym();
+  const ruleC=()=>'C · price '+opSym()+' '+num('ps_val');
+  const setGate=(key,state,rule)=>{
+    const r=g('g'+key), t=g('g'+key+'t');
+    let fill,stroke,col,icon;
+    if(state==='pass'){fill='#06240f';stroke='#4ade80';col='#86efac';icon='✓ ';}
+    else if(state==='block'){fill='#2a0d0d';stroke='#fb7185';col='#fca5a5';icon='✗ ';}
+    else{fill='#15151A';stroke='#3a3a44';col='#cbd5e1';icon='🔎 ';}
+    r.setAttribute('fill',fill);r.setAttribute('stroke',stroke);t.setAttribute('fill',col);t.textContent=icon+rule;
+  };
+  const resetGates=()=>{setGate('A','idle','A · no filter');setGate('B','idle',ruleB());setGate('C','idle',ruleC());};
+  const upd=()=>{
+    g('tcLabel2').innerHTML=opSym()+' '+num('ps_val');
+    g('bWant').textContent='wants '+bSym();
+    g('engTopic').textContent=g('ps_topic').value;
+    g('flowLabel').textContent='→ '+g('ps_topic').value;
+    g('pubName').textContent=g('ps_pub').options[g('ps_pub').selectedIndex].text;
+    const msg={MsgType:'TRADE',Symbol:g('ps_sym').value.toUpperCase(),ExchangeID:g('ps_ex').value,Currency:g('ps_cur').value,TradePrice:num('ps_price'),Quantity:num('ps_qty'),TradeSide:g('ps_sd').value};
+    g('ps_msg').innerHTML=jsonHTML(msg);
+    g('flowTip').textContent='Full message published to '+g('ps_topic').value+':\n'+JSON.stringify(msg,null,2);
+    resetGates();
+  };
+  const PS={aapl:['AAPL','NASDAQ','USD',192.45,2500,'B'],nyse:['GE','NYSE','USD',165.20,15000,'S'],block:['AAPL','NASDAQ','USD',193.10,55000,'B'],fx:['EUR/USD','FX','EUR',1.0825,1000000,'B']};
+  document.querySelectorAll('[data-sc]').forEach(b=>b.onclick=()=>{const v=PS[b.dataset.sc];g('ps_sym').value=v[0];g('ps_ex').value=v[1];g('ps_cur').value=v[2];g('ps_price').value=v[3];g('ps_qty').value=v[4];g('ps_sd').value=v[5];upd();});
+  ['ps_op','ps_sym','ps_ex','ps_cur','ps_sd','ps_price','ps_qty','ps_val','ps_bsym','ps_topic'].forEach(id=>{g(id).oninput=upd;g(id).onchange=upd;});
+  g('ps_pub').onchange=()=>{g('ps_topic').value=g('ps_pub').value;upd();};
+  g('ps_go').onclick=()=>{
+    g('ps_stop').style.display='none';
+    setLine(lines.pPE,'#60a5fa',true);
+    [lines.g2tA,lines.g2tB,lines.g2tC].forEach(l=>setLine(l,'#3a3a44',false));
+    resetGates();
+    ['rA','rB','rC'].forEach(id=>setRes(id,'Pending'));
+    g('ps_go').disabled=true; g('ps_go').textContent='Processing…';
+    setTimeout(()=>{
+      const sym=g('ps_sym').value.toUpperCase(), op=g('ps_op').value, price=num('ps_price'), val=num('ps_val');
+      const pass={A:true, B:sym===bSym(), C:(op==='>'?price>val:op==='<'?price<val:Math.abs(price-val)<0.005)};
+      const rule={A:'A · no filter',B:ruleB(),C:ruleC()};
+      setLine(lines.pPE,'#60a5fa',true);
+      ['A','B','C'].forEach(k=>{
+        setGate(k,pass[k]?'pass':'block',rule[k]);
+        setLine(lines['g2t'+k],pass[k]?'#4ade80':'#3a3a44',pass[k]);
+        setRes('r'+k,pass[k]?'Delivered':'Filtered');
+      });
+      g('ps_go').disabled=false; g('ps_go').textContent='Publish again 📤';
+      g('ps_stop').style.display='block';
+    },1200);
+  };
+  g('ps_stop').onclick=()=>{[lines.pPE,lines.g2tA,lines.g2tB,lines.g2tC].forEach(l=>l.classList.remove('flowing'));g('ps_stop').style.display='none';};
+  upd();
+}});
+
+/* ---------- 2. TOPIC ---------- */
+const TOPICS={
+  'MARKET_DATA':{type:'JSON',rate:'12,000/s',desc:'Live price ticks for every stock.',sample:SCENARIOS.aapl},
+  'ORDERS':{type:'FIX',rate:'800/s',desc:'Orders traders place; tracked OPEN → FILLED.',
+    sample:{MsgType:"ORDER",orderId:"ORD-88421",Symbol:"MSFT",trader:"jdoe",qty:1200,TradePrice:415.30,TradeSide:"B",status:"OPEN"}},
+  'ORDERS.US':{type:'FIX',rate:'500/s',desc:'US-only order flow — a sub-channel of ORDERS.',
+    sample:{MsgType:"ORDER",orderId:"ORD-90011",Symbol:"AAPL",trader:"asmith",qty:300,TradePrice:192.40,TradeSide:"S",status:"OPEN"}},
+  'TRADES':{type:'JSON',rate:'3,400/s',desc:'Executed trades (deals that completed).',sample:SCENARIOS.block},
+  'RISK':{type:'JSON',rate:'20/s',desc:'Risk numbers per desk — VaR, PnL.',
+    sample:{MsgType:"RISK",RiskBook:"EQ-DELTA-1",VaR:2450000,PnL:-118000,Symbol:"AAPL"}},
+  'NEWS':{type:'XML',rate:'5/s',desc:'Market headlines & alerts.',
+    sample:{MsgType:"NEWS",headline:"Fed holds rates steady",Symbol:"SPX",priority:"HIGH"}}
+};
+C({id:'topic',group:'core',icon:'📂',title:'Topic',sub:'A named channel — like a group chat AMPS routes messages through.',
+render:()=>`
+  <style>
+    .topic-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:12px}
+    .topic-card{border:1.5px solid var(--line);border-radius:11px;padding:13px 15px;cursor:pointer;transition:all .15s;background:#fff}
+    .topic-card:hover{border-color:var(--blue);box-shadow:0 2px 10px rgba(37,99,235,.12)}
+    .topic-card.sub{border-color:var(--green);background:#f0fdf4;box-shadow:0 0 0 2px rgba(22,163,74,.15)}
+    .topic-card.picked{border-color:var(--blue);box-shadow:0 0 0 2px rgba(37,99,235,.22)}
+    .tc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px}
+    .tc-name{font-family:var(--mono);font-weight:700;font-size:13.5px;color:var(--ink);word-break:break-all}
+    .tc-type{font-size:10px;font-weight:700;background:#eef2f7;color:#475569;padding:2px 7px;border-radius:999px;flex:none}
+    .tc-desc{font-size:12.5px;color:var(--muted);min-height:34px}
+    .tc-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:11px}
+    .tc-rate{color:#94a3b8;font-family:var(--mono)}
+    .tc-view{color:var(--blue);font-weight:600}
+    .topic-card.sub .tc-view{color:var(--green-ink)}
+    #rxInput{font-family:var(--mono);padding:8px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;min-width:200px}
+    .topic-facts{font-size:14.5px;line-height:1.55;margin:10px 0 4px;padding-left:20px}
+    .topic-facts li{margin-bottom:9px}
+    .pub-line{font-family:var(--mono);font-size:13.5px;background:#0f172a;color:#e2e8f0;border-radius:9px;padding:13px 15px;overflow-x:auto;white-space:nowrap;margin:2px 0}
+    .t-topic{background:#3b82f6;color:#fff;border-radius:5px;padding:2px 7px;font-weight:700}
+    .t-msg{background:rgba(34,197,94,.22);color:#86efac;border-radius:5px;padding:2px 7px}
+    .anatomy-legend{display:flex;flex-direction:column;gap:8px;margin-top:14px;font-size:13.5px}
+    .anatomy-legend .sw{display:inline-block;width:13px;height:13px;border-radius:3px;margin-right:9px;vertical-align:middle}
+    .pub-anatomy{font-family:var(--mono);font-size:14px;background:#0f172a;color:#e2e8f0;border-radius:9px;padding:18px 16px 14px;display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 6px;line-height:1.4}
+    .pub-anatomy .code-txt{padding-top:1px}
+    .pub-anatomy .seg{display:inline-flex;flex-direction:column;align-items:center;gap:7px}
+    .pub-anatomy .seg-cap{font-size:11px;font-weight:700;white-space:nowrap}
+    .pub-anatomy .seg-cap.topic{color:#93c5fd}
+    .pub-anatomy .seg-cap.msg{color:#86efac}
+    .tip-field{text-decoration:underline dotted;text-underline-offset:2px;cursor:help}
+  </style>
+  <div class="analogy">💬 A <b>topic is a named group chat</b> (think a WhatsApp group, or a TV channel). Post a trade into <code class="inline">MARKET_DATA</code> and only people who joined <code class="inline">MARKET_DATA</code> receive it. The <b>name</b> is how AMPS knows where to deliver a message and which channels you're listening to.</div>
+  <p class="body">A topic is the <b>address on the envelope</b> — not something inside the letter. Three things make AMPS topics special:</p>
+  <ul class="topic-facts">
+    <li><b>No setup needed.</b> You never create a topic in advance. The first time anyone publishes to <code class="inline">MARKET_DATA</code>, it just works — like a WhatsApp group that exists the instant you name it. No admin, no "please create the topic first."</li>
+    <li><b>One message → exactly one topic.</b> A publisher writes <b>one</b> address on the envelope. A trade goes to <code class="inline">MARKET_DATA</code> <i>or</i> <code class="inline">TRADES</code> — never both at once.</li>
+    <li><b>Subscribers can join many at once</b> with a regex. A receiver asks for <code class="inline">ORDERS.*</code> and gets <code class="inline">ORDERS</code>, <code class="inline">ORDERS.US</code>, <code class="inline">ORDERS.EU</code> in a single subscription. (Only subscribers can do this — you can't write a pattern as an address.)</li>
+  </ul>
+
+  <div class="card" style="border:1.5px solid #fcd34d;background:#fffbeb">
+    <h2 style="margin-top:0">🤔 Is the topic a field <i>inside</i> the message? No!</h2>
+    <p class="body" style="margin-top:0">This confuses almost everyone. The topic is set <b>outside</b> the message — it's the <b>first argument</b> to <code class="inline">publish()</code>. Mailing a letter: the topic is the <b>address on the envelope</b>; the message is the <b>letter inside</b>.</p>
+    <div class="pub-anatomy">
+      <span class="code-txt">client.publish(</span>
+      <span class="seg"><span class="t-topic" data-tip="The envelope address — AMPS delivers the message by this. It is the FIRST argument to publish().">"MARKET_DATA"</span><span class="seg-cap topic" data-tip="This is the TOPIC — where the message is delivered.">↑ TOPIC · the address</span></span>
+      <span class="code-txt">,</span>
+      <span class="seg"><span class="t-msg">{ <span class="tip-field" data-tip="Just a field INSIDE the message — NOT the topic. AMPS ignores it for routing.">MsgType</span>:"TRADE", Symbol:"AAPL", TradePrice:192.45 }</span><span class="seg-cap msg" data-tip="This is the MESSAGE — the actual content. MsgType is just one field inside it.">↑ MESSAGE · its content</span></span>
+      <span class="code-txt">)</span>
+    </div>
+    <p class="hint" style="margin:14px 0 0">✅ That's why <code class="inline">client.publish("TRADES", { MsgType:"TRADE", … })</code> goes to the <b>TRADES</b> topic — the <code class="inline">MsgType</code> value ("TRADE") is irrelevant to where it's delivered. Exactly what you answered!</p>
+  </div>
+
+  <div class="card">
+    <h2>📂 The channels (topics) on this AMPS instance</h2>
+    <p class="hint">Each topic carries one kind of message. 👆 Click a card to see exactly how a publisher posts to it.</p>
+    <div class="topic-board" id="topicBoard"></div>
+    <div id="topicDetail" style="margin-top:18px"></div>
+  </div>
+
+  <div class="card">
+    <h2>🔔 Subscribe with a pattern (regex)</h2>
+    <p class="hint">A subscriber can join several channels at once with a regex. Type a pattern — matching topics light up <span style="color:var(--green-ink);font-weight:600">green</span>. (Regex is for subscribing only — publishers always name one exact topic.)</p>
+    <div class="chips" style="margin-bottom:10px">
+      <button class="chip" data-rx="MARKET_DATA">MARKET_DATA</button>
+      <button class="chip" data-rx="ORDERS.*">ORDERS.*</button>
+      <button class="chip" data-rx="(TRADES|RISK)">(TRADES|RISK)</button>
+      <button class="chip" data-rx=".*">.* (everything)</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-family:var(--mono);font-size:14px">subscribe</span>
+      <input id="rxInput" value="ORDERS.*">
+    </div>
+    <div id="rxResult"></div>
+  </div>
+
+  <div class="note blue">ℹ️ The <b>message type is part of a topic's identity</b>: a JSON topic named <code class="inline">quotes</code> and an XML topic named <code class="inline">quotes</code> are <b>two different topics</b> — messages never cross between them.</div>
+`,init:()=>{
+  const board=document.getElementById('topicBoard'), detail=document.getElementById('topicDetail'), names=Object.keys(TOPICS);
+  const showDetail=n=>{
+    const t=TOPICS[n];
+    board.querySelectorAll('.topic-card').forEach(c=>c.classList.toggle('picked',c.dataset.topic===n));
+    detail.innerHTML='<p class="hint" style="margin:0 0 6px">A publisher posts to <b>'+n+'</b> like this — <span class="t-topic" style="font-size:11px">topic</span> first, <span class="t-msg" style="font-size:11px">message</span> second:</p>'
+      +'<pre style="margin:0">client.publish(<span class="t-topic">"'+n+'"</span>, '+jsonHTML(t.sample)+')</pre>'
+      +'<button class="chip" id="inspectBtn" style="margin-top:12px">🔍 Inspect every field</button>';
+    document.getElementById('inspectBtn').onclick=()=>openPayload(n,t.sample,'A sample '+t.type+' message on the '+n+' topic.');
+  };
+  names.forEach(n=>{
+    const t=TOPICS[n];
+    const card=document.createElement('div');card.className='topic-card';card.dataset.topic=n;
+    card.innerHTML='<div class="tc-top"><span class="tc-name">'+n+'</span><span class="tc-type">'+t.type+'</span></div>'
+      +'<div class="tc-desc">'+t.desc+'</div>'
+      +'<div class="tc-foot"><span class="tc-rate">~'+t.rate+'</span><span class="tc-view">see publish →</span></div>';
+    card.onclick=()=>showDetail(n);
+    board.appendChild(card);
+  });
+  showDetail(names[0]);
+  const rxIn=document.getElementById('rxInput'), rxRes=document.getElementById('rxResult');
+  const applyRx=()=>{
+    let re=null; try{re=new RegExp('^'+rxIn.value+'$');}catch(e){}
+    const matched=[];
+    board.querySelectorAll('.topic-card').forEach(c=>{
+      const ok=re&&re.test(c.dataset.topic);
+      c.classList.toggle('sub',!!ok);
+      if(ok)matched.push(c.dataset.topic);
+    });
+    rxRes.innerHTML = re
+      ? '<div class="note bare green" style="margin:12px 0 0">✓ This one subscription receives <b>'+matched.length+'</b> topic(s): '+(matched.length?matched.join(', '):'none yet')+'</div>'
+      : '<div class="note bare amber" style="margin:12px 0 0">⚠️ Not a valid pattern.</div>';
+  };
+  document.querySelectorAll('[data-rx]').forEach(b=>b.onclick=()=>{rxIn.value=b.dataset.rx;applyRx();});
+  rxIn.oninput=applyRx; applyRx();
+}});
+
+/* ---------- 3. MESSAGE ---------- */
+const MSG_CMDS={
+  group_begin:{cmd:'group_begin',sub:'snapshot starts',color:'#64748b',lesson:'State of the World (concept 7)',lessonId:'sow',header:{command:'group_begin',topic:'orders',queryId:'q-42'},data:null,
+    mean:'The snapshot is about to start.',act:'Get ready to receive the current rows. (No body — this is just a signal.)'},
+  sow:{cmd:'sow',sub:'an existing row',color:'#2563eb',lesson:'State of the World (concept 7)',lessonId:'sow',header:{command:'sow',topic:'orders',sowKey:'ORD-88421',timestamp:'…10:30:01'},data:{orderId:'ORD-88421',Symbol:'MSFT',qty:1200,status:'OPEN'},
+    mean:'A record from the current-state snapshot you get when a screen first loads.',act:'➕ ADD this row to your table.'},
+  group_end:{cmd:'group_end',sub:'snapshot done',color:'#64748b',lesson:'State of the World (concept 7)',lessonId:'sow',header:{command:'group_end',topic:'orders',queryId:'q-42'},data:null,
+    mean:'The snapshot is complete.',act:'✅ Render the full table — you now hold every current row.'},
+  p:{cmd:'p',sub:'live update · everyday',color:'#16a34a',lesson:'the everyday message (Publish, concept 4)',lessonId:'publish',header:{command:'p',topic:'orders',sowKey:'ORD-88421',timestamp:'…10:31:14'},data:{orderId:'ORD-88421',Symbol:'MSFT',qty:1500,status:'OPEN'},
+    mean:'A live publish — a new message or an update. This is the everyday message that plain pub/sub delivers.',act:'🔄 ADD or UPDATE that row (match it by sowKey).'},
+  oof:{cmd:'oof',sub:'remove a row',color:'#d97706',lesson:'Out-of-Focus (concept 9)',lessonId:'oof',header:{command:'oof',topic:'orders',sowKey:'ORD-88421',reason:'no longer matches'},data:null,
+    mean:'Out-of-focus: the record left your filter (filled / cancelled / deleted).',act:'➖ REMOVE that row from your table.'}
+};
+C({id:'message',group:'core',icon:'✉️',title:'Message',sub:'The envelope (header) + the letter inside (data).',
+render:()=>`
+  <style>
+    .msg-anat{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media(max-width:760px){.msg-anat{grid-template-columns:1fr}}
+    .msg-pane{border-radius:11px;padding:14px 16px;border:1.5px solid}
+    .msg-pane.head{background:#f5f3ff;border-color:#c4b5fd}
+    .msg-pane.bodyp{background:#f0fdf4;border-color:#86efac}
+    .msg-pane h4{margin:0 0 10px;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em}
+    .hfield{display:flex;gap:6px;font-family:var(--mono);font-size:12.5px;padding:6px 0;border-bottom:1px dashed #e2e8f0;align-items:baseline}
+    .hfield:last-child{border-bottom:none}
+    .hfield .hk{color:#6d28d9;font-weight:700;cursor:help;text-decoration:underline dotted;text-underline-offset:2px}
+    .hfield .hv{color:#0f172a}
+    .cmd-btns{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+    .cmd-btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 15px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;cursor:pointer;color:var(--ink);text-align:left}
+    .cmd-btn .cb-cmd{font-family:var(--mono);font-size:13px;font-weight:700}
+    .cmd-btn .cb-sub{font-size:10.5px;font-weight:500;opacity:.72}
+    .cmd-btn.active{color:#fff;border-color:transparent}
+    .cmd-btn.active .cb-sub{opacity:.92}
+    .act-box{border-radius:10px;padding:13px 16px;font-size:14.5px;font-weight:600;margin-top:12px}
+    .tipword{cursor:help;text-decoration:underline dotted;text-underline-offset:3px}
+    .who-table{width:100%;border-collapse:collapse;font-size:13px}
+    .who-table th,.who-table td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+    .who-table th{font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:.03em}
+    .who-table td:first-child{font-family:var(--mono);color:#1e40af;white-space:nowrap;font-weight:600}
+  </style>
+  <div class="analogy">✉️ A <b>message is a posted letter.</b> The <b id="w-data" class="tipword" style="color:#166534">data</b> is the letter inside — the content your app shows. The <b id="w-header" class="tipword" style="color:#6d28d9">header</b> is the envelope: metadata AMPS adds (topic, a record key, a timestamp, and the all-important <b>command</b>). <i style="font-weight:400">Hover the underlined words for a sample.</i></div>
+  <p class="body">You really read just two things off every message: <code class="inline">message.data</code> — the <b>content</b> (what you render <i>and</i> what AMPS's content filter matches against) — and <code class="inline">message.header.command()</code> — the <b>instruction</b> (add a row? update it? remove it?).</p>
+
+  <div class="card">
+    <h2>🧩 The whole message in one object</h2>
+    <p class="hint">A message that arrives in your <code class="inline">onMessage</code> handler is one object with two parts — <span style="color:#6d28d9;font-weight:700">header</span> and <span style="color:#166534;font-weight:700">data</span>:</p>
+    <pre style="font-size:12.5px">const message = {
+  <span class="j-key" style="color:#a78bfa">header</span>: { command:<span class="j-str">"p"</span>, topic:<span class="j-str">"MARKET_DATA"</span>, sowKey:<span class="j-str">"AAPL"</span>, timestamp:<span class="j-str">"…10:30:01"</span>, bookmark:<span class="j-str">"1|44|"</span> },
+  <span class="j-key" style="color:#86efac">data</span>:   { Symbol:<span class="j-str">"AAPL"</span>, TradePrice:<span class="j-num">192.45</span>, TradeSize:<span class="j-num">2500</span>, TradeSide:<span class="j-str">"B"</span> }
+}</pre>
+    <p class="hint" style="margin:14px 0 6px">…and you pull the two parts out like this:</p>
+    <pre style="font-size:12.5px"><span style="color:#86efac">message.data</span>                  <span style="color:#64748b">// the content → render it; filters also match on it</span>
+<span style="color:#a78bfa">message.header.command()</span>      <span style="color:#64748b">// "p"    → what to do (add / update / remove the row)</span>
+<span style="color:#a78bfa">message.header.sowKey()</span>       <span style="color:#64748b">// "AAPL" → which row to update or remove</span></pre>
+  </div>
+
+  <div class="card">
+    <h2>🧑‍💻 Who uses each part — how, when &amp; where</h2>
+    <table class="who-table">
+      <thead><tr><th>Part</th><th>What it is</th><th>Who uses it</th><th>What for</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>message.data</td>
+          <td>the content (Symbol, price, qty…)</td>
+          <td>① <b>your UI</b><br>② the <b>AMPS server</b></td>
+          <td>① render it on screen.<br>② the server's <b>content filter</b> matches against these fields — e.g. <code class="inline">/Symbol = 'AAPL'</code> tests <code class="inline">data.Symbol</code> — <i>on the server, before the message is ever sent to you.</i></td>
+        </tr>
+        <tr>
+          <td>message.header</td>
+          <td>metadata AMPS attaches</td>
+          <td>① <b>AMPS</b> (routing &amp; bookkeeping)<br>② <b>your app</b></td>
+          <td><code class="inline">command()</code> = what to do (add/update/remove); <code class="inline">sowKey()</code> = which row; <code class="inline">bookmark</code> = replay position; <code class="inline">topic</code> = which channel it came from.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>✉️ Anatomy of a message</h2>
+    <p class="hint">Hover each <span style="color:#6d28d9;font-weight:600">header field</span> to see what it means. 👆 Click the data to inspect every field.</p>
+    <div class="msg-anat">
+      <div class="msg-pane head">
+        <h4 style="color:#6d28d9">📑 Header — the envelope (AMPS fills this in)</h4>
+        <div class="hfield"><span class="hk" data-field="command">command</span><span class="hv">: "p"</span></div>
+        <div class="hfield"><span class="hk" data-field="topic">topic</span><span class="hv">: "MARKET_DATA"</span></div>
+        <div class="hfield"><span class="hk" data-field="sowKey">sowKey</span><span class="hv">: "AAPL"</span></div>
+        <div class="hfield"><span class="hk" data-field="timestamp">timestamp</span><span class="hv">: "20240615-10:30:01"</span></div>
+        <div class="hfield"><span class="hk" data-field="bookmark">bookmark</span><span class="hv">: "1|44|"</span></div>
+      </div>
+      <div class="msg-pane bodyp">
+        <h4 style="color:#166534">📄 Data — the letter inside (what you render)</h4>
+        <pre id="msgData" style="margin:0;font-size:12px;cursor:pointer">${jsonHTML(SCENARIOS.aapl)}</pre>
+        <p class="hint" style="margin:8px 0 0">👆 Click to open every field with a note. You read this with <code class="inline">message.data</code>.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🔬 Message inspector — the <code class="inline">command</code> decides what your code does</h2>
+    <p class="hint">Your <code class="inline">onMessage</code> handler reads <code class="inline">message.header.command()</code> and acts on it. Click each command to see the exact message AND the matching action:</p>
+    <pre style="font-size:12px;margin:0 0 16px">onMessage = (message) => {
+  switch (<span style="color:#a78bfa">message.header.command()</span>) {
+    case <span class="j-str">'sow'</span>: addRow(message.data);                break  <span style="color:#64748b">// existing record</span>
+    case <span class="j-str">'p'</span>:   upsertRow(message.data);             break  <span style="color:#64748b">// live insert/update</span>
+    case <span class="j-str">'oof'</span>: removeRow(message.header.sowKey());  break  <span style="color:#64748b">// drop the row</span>
+  }
+}</pre>
+    <div class="note bare blue" style="background:#dbeafe;border-left:4px solid var(--blue);margin:0 0 16px">📚 <b>These are AMPS's message commands — and yes, you meet them again.</b> <code class="inline">p</code> is the everyday live message. <code class="inline">sow</code>, <code class="inline">group_begin</code> &amp; <code class="inline">group_end</code> belong to <b>State of the World (concept 7)</b>; <code class="inline">oof</code> belongs to <b>Out-of-Focus (concept 9)</b>. Right now the <i>only</i> takeaway is: <b>the <code class="inline">command</code> field decides your action</b> (add / update / remove). Each button shows which lesson covers it in depth.</div>
+    <div class="cmd-btns" id="cmdBtns"></div>
+    <div id="cmdPanel"></div>
+  </div>
+
+  <div class="note green">✅ Two-line summary: <b>message.data</b> = <b>what</b> to show (and what filters match on). <b>message.header.command()</b> = <b>what to do</b> with it (add / update / remove). The header is the instruction; the data is the content.</div>
+`,init:()=>{
+  const hSample={command:'p',topic:'MARKET_DATA',sowKey:'AAPL',timestamp:'20240615-10:30:01',bookmark:'1|44|'};
+  const dSample=SCENARIOS.aapl;
+  const tpre=o=>'<pre style="margin:6px 0 0;font-family:monospace;font-size:11px;color:#cbd5e1;white-space:pre">'+esc(JSON.stringify(o,null,2))+'</pre>';
+  const wH=document.getElementById('w-header'); if(wH)wH.dataset.tip='<b>HEADER</b> — the envelope (metadata AMPS attaches). Sample:'+tpre(hSample);
+  const wD=document.getElementById('w-data'); if(wD)wD.dataset.tip='<b>DATA</b> — the letter inside (your content). Sample:'+tpre(dSample);
+  const HF={
+    command:'<b>command</b> — what KIND of message this is. Your app reads this to decide <b>add / update / remove</b>. The most important header field.',
+    topic:'<b>topic</b> — which topic (channel) the message came from.',
+    sowKey:'<b>sowKey</b> — a stable key for this record, so a later update replaces the right row (no duplicates).',
+    timestamp:'<b>timestamp</b> — when AMPS processed the message.',
+    bookmark:'<b>bookmark</b> — the message position in the transaction log; used to replay history.'
+  };
+  document.querySelectorAll('.hk[data-field]').forEach(el=>el.dataset.tip=HF[el.dataset.field]);
+  document.getElementById('msgData').onclick=()=>openPayload('Message data (body)',dSample,'The body of an AAPL trade tick — read with message.data.');
+  const order=['group_begin','sow','group_end','p','oof'];
+  const btns=document.getElementById('cmdBtns'), panel=document.getElementById('cmdPanel');
+  const show=k=>{
+    const c=MSG_CMDS[k];
+    [...btns.children].forEach(b=>{const on=b.dataset.k===k;b.classList.toggle('active',on);b.style.background=on?c.color:'#fff';});
+    panel.innerHTML='<div class="msg-anat">'
+      +'<div class="msg-pane head"><h4 style="color:#6d28d9">📑 Header</h4><pre style="margin:0;font-size:12px">'+jsonHTML(c.header)+'</pre></div>'
+      +'<div class="msg-pane bodyp"><h4 style="color:#166534">📄 Data (body)</h4>'+(c.data?'<pre style="margin:0;font-size:12px">'+jsonHTML(c.data)+'</pre>':'<p class="hint" style="margin:0">— no body — this command is a signal, not data.</p>')+'</div>'
+      +'</div>'
+      +'<p class="body" style="margin:14px 0 0"><b>What it means:</b> '+c.mean+'</p>'
+      +'<div class="act-box" style="background:'+c.color+'1f;color:'+c.color+';border:1px solid '+c.color+'66">👉 What your app does: '+c.act+'</div>'
+      +'<p class="hint" style="margin:12px 0 0">📚 Covered in depth in: <a href="#" onclick="go(\''+c.lessonId+'\');return false" style="color:var(--blue);font-weight:600">'+c.lesson+'</a></p>';
+  };
+  order.forEach(k=>{
+    const c=MSG_CMDS[k];
+    const b=document.createElement('button');b.className='cmd-btn';b.dataset.k=k;
+    b.innerHTML='<span class="cb-cmd">'+c.cmd+'</span><span class="cb-sub">'+c.sub+'</span>';
+    b.onclick=()=>show(k);
+    btns.appendChild(b);
+  });
+  show('sow');
+}});
+
+/* ---------- 4. PUBLISH ---------- */
+C({id:'publish',group:'core',icon:'📤',title:'Publish',sub:'Send a message to a topic — compose, send, forget.',
+render:()=>`
+  <style>
+    .pub2-topic{background:#3b82f6;color:#fff;border-radius:5px;padding:2px 7px;font-weight:700}
+    .pub-log{background:#06240f;color:#86efac;border-radius:9px;padding:12px 14px;font-family:var(--mono);font-size:12px;line-height:1.7;min-height:120px;max-height:220px;overflow-y:auto;white-space:pre-wrap}
+    .conn-pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#16a34a;font-weight:600}
+    .pub-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:24px;align-items:start}
+    @media(max-width:820px){.pub-grid{grid-template-columns:1fr}}
+  </style>
+  <div class="analogy">📤 <b>Publishing = posting a tweet (or dropping a letter in the mailbox).</b> You compose it, hit send, and it's out on the topic. You don't address it to anyone specific, and you don't wait for a reply — AMPS delivers it to whoever subscribed.</div>
+  <p class="body">It's one line: <code class="inline">client.publish(topic, message)</code> — the same two things from the Topic lesson: <span style="color:#1e40af;font-weight:700">topic</span> = where it goes, <span style="color:#166534;font-weight:700">message</span> = what you send.</p>
+
+  <div class="card">
+    <h2>📤 Publish console</h2>
+    <p class="hint"><span class="conn-pill">● connected &amp; logged on</span> &nbsp;— you must connect first (below); then you can publish. Each send just lands on the topic and returns immediately.</p>
+    <div class="grid-form" style="margin-bottom:14px">
+      <div><label class="fld">Topic</label><select id="pb_topic"><option>MARKET_DATA</option><option>ORDERS</option><option>TRADES</option><option>RISK</option><option>NEWS</option></select></div>
+      <div><label class="fld">Symbol</label><input id="pb_sym" value="AAPL"></div>
+      <div><label class="fld">Price</label><input id="pb_pr" type="number" step="0.01" value="192.45"></div>
+      <div><label class="fld">Quantity</label><input id="pb_qty" type="number" value="100"></div>
+      <div><label class="fld">Side</label><select id="pb_sd"><option value="B">Buy</option><option value="S">Sell</option></select></div>
+    </div>
+    <div class="pub-grid">
+      <div>
+        <p class="hint" style="margin:0 0 6px">The exact call your client makes:</p>
+        <pre id="pb_call" style="margin:0"></pre>
+        <button class="btn" id="pb_go" style="margin-top:12px">📤 Publish</button>
+      </div>
+      <div>
+        <p class="hint" style="margin:0 0 6px">Publish log — <i>fire-and-forget</i>, each send just appends:</p>
+        <div class="pub-log" id="pb_log">// nothing published yet — hit Publish</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🍳 The recipe: connect → logon → publish</h2>
+    <pre style="font-size:12.5px">const client = new Client('order-ui')
+<span style="color:#c792ea">await</span> client.connect('wss://amps-dev:9007/amps/json')   <span style="color:#64748b">// 1. open the connection</span>
+<span style="color:#c792ea">await</span> client.logon('trader', '••••')                <span style="color:#64748b">// 2. prove who you are</span>
+client.publish(<span class="pub2-topic">"ORDERS"</span>, { Symbol:"AAPL", qty:100, side:"B" })  <span style="color:#64748b">// 3. fire-and-forget</span></pre>
+    <p class="hint" style="margin-top:10px">For simple pub/sub you don't even <code class="inline">await</code> the publish — it returns right away and AMPS handles delivery.</p>
+  </div>
+
+  <div class="note green"><b>Remember:</b> ① <b>connect &amp; logon first</b> — you can't publish into thin air. ② <b>one topic per publish</b> (no regex — that's subscribers only). ③ <b>fire-and-forget</b> — <code class="inline">publish()</code> hands the message to AMPS and returns immediately; the publisher never learns who received it. As a frontend dev you'll mostly <i>subscribe</i>, but you publish for <b>user actions</b> — e.g. a trader clicks "Buy" → your app does <code class="inline">client.publish("ORDERS", {…})</code>.</div>
+`,init:()=>{
+  const g=id=>document.getElementById(id);
+  const num=id=>parseFloat(g(id).value)||0;
+  const msg=()=>({Symbol:g('pb_sym').value.toUpperCase(),TradePrice:num('pb_pr'),Quantity:num('pb_qty'),TradeSide:g('pb_sd').value});
+  const refresh=()=>{g('pb_call').innerHTML='client.publish(<span class="pub2-topic">"'+g('pb_topic').value+'"</span>, '+jsonHTML(msg())+')';};
+  ['pb_topic','pb_sym','pb_pr','pb_qty','pb_sd'].forEach(i=>{g(i).oninput=refresh;g(i).onchange=refresh;});
+  refresh();
+  let n=0;
+  g('pb_go').onclick=()=>{
+    const t=g('pb_topic').value, m=msg();
+    const line='✓ '+new Date().toLocaleTimeString()+'  → '+t+'   '+JSON.stringify(m);
+    const log=g('pb_log'); if(n===0)log.textContent=''; n++;
+    log.textContent=line+'\n'+log.textContent;
+  };
+}});
+
+/* ---------- 5. SUBSCRIBE ---------- */
+C({id:'subscribe',group:'core',icon:'🔔',title:'Subscribe',sub:'Tune in to a topic — messages start flowing to you, live.',
+render:()=>`
+  <div class="analogy">🔔 <b>Subscribing = hitting the bell icon.</b> The moment you subscribe, new messages get pushed to you automatically — you don't keep asking "anything new?". Unsubscribe (or close the tab) and they stop.</div>
+  <p class="body">In code: <code class="inline">const subId = await client.subscribe(onMessage, 'MARKET_DATA')</code>. Your <code class="inline">onMessage</code> function runs once per arriving message.</p>
+  <div class="card">
+    <h2>🔔 Toggle your subscription</h2>
+    <button class="btn" id="subBtn">🔔 Subscribe to MARKET_DATA</button>
+    <span id="subState" class="progress" style="margin-left:10px;color:#64748b">Not subscribed — screen is quiet.</span>
+    <div class="screen live" id="subFeed" style="margin-top:14px;min-height:120px">// no messages — you haven't subscribed yet</div>
+  </div>
+  <div class="note amber">⚠️ Real feeds can push <b>thousands of messages per second</b>. Always unsubscribe when a screen closes, or you keep receiving data for a view nobody's looking at.</div>
+`,init:()=>{
+  let on=false, timer=null, n=0;
+  const feed=document.getElementById('subFeed'), st=document.getElementById('subState'), btn=document.getElementById('subBtn');
+  const syms=['AAPL','MSFT','GE','TSLA','JPM','NVDA'];
+  const tick=()=>{ n++; const s=syms[Math.floor(Math.random()*syms.length)];
+    const pr=(50+Math.random()*400).toFixed(2);
+    feed.textContent=`[${new Date().toLocaleTimeString()}] ${s} @ $${pr}  (msg #${n})\n`+feed.textContent.split('\n').slice(0,7).join('\n');
+  };
+  btn.onclick=()=>{ on=!on;
+    if(on){btn.textContent='🔕 Unsubscribe';st.textContent='● LIVE — messages streaming in';st.style.color='#16a34a';feed.textContent='// subscribed! waiting for ticks...';timer=setInterval(tick,900);}
+    else{btn.textContent='🔔 Subscribe to MARKET_DATA';st.textContent='Stopped. No more messages arrive.';st.style.color='#64748b';clearInterval(timer);}
+  };
+}});
+
+/* ---------- 6. CONTENT FILTERING (main simulator) ---------- */
+C({id:'filter',group:'core',icon:'🔎',title:'Content Filtering',sub:'A SQL-WHERE on your subscription. Server only sends what matches.',
+render:()=>`
+  <div class="analogy">🚪 <b>A filter is a nightclub bouncer.</b> Each trader's screen says "only let in messages that match my rule." AMPS checks every message against the rule <b>on the server</b> and only delivers the ones that pass — so your app gets less data and simpler code.</div>
+  <p class="body">Fill in a trade and hit publish. The <b>same</b> message hits three screens with three different filters — watch who gets it and who doesn't.</p>
+  <div class="card">
+    <h2>1 · Market-data feed (publisher)</h2>
+    <p class="hint">Quick scenarios: </p>
+    <div class="chips"><button class="chip" data-sc="aapl">AAPL mid-day tick</button><button class="chip" data-sc="nyse">Large NYSE sell</button><button class="chip" data-sc="block">NASDAQ block buy (55k)</button></div>
+    <div class="grid-form" style="margin-top:12px">
+      <div><label class="fld">Symbol</label><input id="f_sym" value="AAPL"></div>
+      <div><label class="fld">Exchange</label><select id="f_ex"><option>NASDAQ</option><option>NYSE</option></select></div>
+      <div><label class="fld">Price ($)</label><input id="f_pr" type="number" step="0.01" value="192.45"></div>
+      <div><label class="fld">Size (shares)</label><input id="f_sz" type="number" value="2500"></div>
+      <div><label class="fld">Side</label><select id="f_sd"><option value="B">Buy</option><option value="S">Sell</option></select></div>
+    </div>
+    <button class="btn full" id="f_btn">📤 Publish market event</button>
+  </div>
+  <div class="card engine">
+    <h2>2 · Inside the AMPS engine</h2>
+    <p class="sub">AMPS reads the message and tests it against each subscriber's filter — instantly, in memory.</p>
+    <pre id="f_payload">// publish a message to see what the engine evaluates...</pre>
+  </div>
+  <div class="card">
+    <h2>3 · Three subscriber screens</h2>
+    <div class="dash-grid">
+      <div class="dash" id="dA"><div class="dash-top"><h4>A · AAPL Tracker</h4><span class="tag wait" id="tA">WAITING</span></div>
+        <p class="filt">Filter: <code class="inline">/Symbol = 'AAPL'</code></p><div class="screen" id="sA">No message yet.</div></div>
+      <div class="dash" id="dB"><div class="dash-top"><h4>B · NYSE Whale Alert</h4><span class="tag wait" id="tB">WAITING</span></div>
+        <p class="filt">Filter: <code class="inline">/TradeSize &gt; 10000 AND /ExchangeID = 'NYSE'</code></p><div class="screen" id="sB">No message yet.</div></div>
+      <div class="dash" id="dC"><div class="dash-top"><h4>C · Block-Trade Desk</h4><span class="tag wait" id="tC">WAITING</span></div>
+        <p class="filt">Filter: <code class="inline">/TradeSize &gt;= 50000</code></p><div class="screen" id="sC">No message yet.</div></div>
+    </div>
+    <p class="hint" style="margin-top:10px">👆 When a screen lights up green, click its message to inspect the full payload.</p>
+  </div>
+  <div class="note green">The filter runs <b>on the AMPS server</b>, not in your browser. So your app only ever receives messages that already matched — that means less data over the wire and no client-side "if" checks. Every message your handler sees is guaranteed to be one you actually wanted.</div>
+`,init:()=>{
+  const g=id=>document.getElementById(id);
+  const setSc=sc=>{const s=SCENARIOS[sc];g('f_sym').value=s.Symbol;g('f_ex').value=s.ExchangeID;g('f_pr').value=s.TradePrice;g('f_sz').value=s.TradeSize;g('f_sd').value=s.TradeSide;};
+  document.querySelectorAll('[data-sc]').forEach(b=>b.onclick=()=>setSc(b.dataset.sc));
+  let last=null;
+  g('f_btn').onclick=()=>{
+    const p={MsgType:"TRADE",Symbol:g('f_sym').value.toUpperCase(),ExchangeID:g('f_ex').value,
+      TradePrice:Number(g('f_pr').value),TradeSize:Number(g('f_sz').value),TradeSide:g('f_sd').value,
+      SourceTimestamp_ns:Date.now()*1e6,Derived:{TodayVWAP:Number((Number(g('f_pr').value)*0.998).toFixed(2)),TotalDayVolume:15000000+Number(g('f_sz').value)}};
+    last=p; g('f_payload').innerHTML=jsonHTML(p);
+    const A=p.Symbol==='AAPL', B=p.TradeSize>10000&&p.ExchangeID==='NYSE', C=p.TradeSize>=50000;
+    const apply=(d,t,s,hit,goodText)=>{
+      g(t).className='tag '+(hit?'on':'off'); g(t).textContent=hit?'DELIVERED':'FILTERED OUT';
+      g(d).className='dash'+(hit?' hit':'');
+      if(hit){g(s).className='screen live';g(s).innerHTML=goodText;g(s).style.cursor='pointer';g(s).onclick=()=>openPayload('Delivered to this screen',last,'This message passed the filter.');}
+      else{g(s).className='screen';g(s).textContent='✗ Did not match the filter — AMPS sent nothing here.';g(s).onclick=null;}
+    };
+    apply('dA','tA','sA',A,`📈 ${p.Symbol} @ $${p.TradePrice}\nSize: ${p.TradeSize.toLocaleString()} · ${p.TradeSide==='B'?'BUY':'SELL'}`);
+    apply('dB','tB','sB',B,`🐋 LARGE NYSE TRADE\n${p.Symbol} · ${p.TradeSize.toLocaleString()} shares`);
+    apply('dC','tC','sC',C,`🧱 BLOCK TRADE\n${p.Symbol} · ${p.TradeSize.toLocaleString()} shares @ $${p.TradePrice}`);
+  };
+}});
+
+/* ---------- 7. SOW ---------- */
+C({id:'sow',group:'core',icon:'🗂️',title:'State of the World (SOW)',sub:'A live scoreboard: AMPS keeps the latest message per key.',
+render:()=>`
+  <div class="analogy">🏆 <b>SOW is a live sports scoreboard.</b> You don't care about every past goal — you want the <b>current</b> score, instantly, and then live updates. AMPS keeps the latest message per key (e.g. per Symbol) so your table is full the moment it loads.</div>
+  <p class="body">Without SOW your table starts empty and slowly fills as ticks arrive. With SOW you call <code class="inline">sow_and_subscribe</code>: AMPS sends a <b>snapshot</b> of all current rows, then live updates forever. Each new tick <b>updates the same row in place</b> — it doesn't pile up.</p>
+  <div class="card">
+    <h2>🗂️ Live price board (one row per symbol)</h2>
+    <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+      <button class="btn green" id="sowSnap">📸 Load SOW snapshot</button>
+      <button class="btn" id="sowStart" disabled>▶ Start live updates</button>
+      <button class="btn ghost" id="sowStop" disabled>⏸ Pause</button>
+    </div>
+    <table><thead><tr><th>Symbol</th><th>Last Price</th><th>Size</th><th>Side</th><th>Updated</th></tr></thead>
+    <tbody id="sowBody"><tr><td colspan="5" class="hint" style="padding:16px">Click "Load SOW snapshot" — the board fills instantly, like a real dashboard on open.</td></tr></tbody></table>
+    <p class="hint" style="margin-top:8px">👆 Click any row to inspect that symbol's full latest message. Watch rows <b>flash</b> as they update in place.</p>
+  </div>
+  <div class="note green">✅ The pattern behind almost every bank dashboard: <b>snapshot now + live updates</b> = a screen that's never empty and never stale.</div>
+`,init:()=>{
+  const body=document.getElementById('sowBody'); const rows=new Map(); let timer=null;
+  const syms=['AAPL','MSFT','GE','TSLA','JPM','NVDA','AMZN'];
+  const mk=s=>({MsgType:"TRADE",Symbol:s,ExchangeID:Math.random()<.5?'NASDAQ':'NYSE',TradePrice:Number((50+Math.random()*400).toFixed(2)),TradeSize:Math.floor((1+Math.random()*40))*100,TradeSide:Math.random()<.5?'B':'S',SourceTimestamp_ns:Date.now()*1e6});
+  const render=(flashSym)=>{
+    body.innerHTML='';
+    for(const [s,m] of rows){
+      const tr=document.createElement('tr'); tr.className='row-hover'+(s===flashSym?' flashg':'');
+      tr.innerHTML=`<td class="click"><b>${s}</b></td><td>$${m.TradePrice}</td><td>${m.TradeSize.toLocaleString()}</td><td><span class="pill ${m.TradeSide==='B'?'b':'s'}">${m.TradeSide==='B'?'BUY':'SELL'}</span></td><td class="hint">${new Date().toLocaleTimeString()}</td>`;
+      tr.onclick=()=>openPayload('Latest for '+s,m,'SOW keeps just the newest message for this key.');
+      body.appendChild(tr);
+    }
+  };
+  document.getElementById('sowSnap').onclick=()=>{
+    rows.clear(); syms.slice(0,5).forEach(s=>rows.set(s,mk(s))); render();
+    document.getElementById('sowStart').disabled=false;
+  };
+  document.getElementById('sowStart').onclick=()=>{
+    document.getElementById('sowStart').disabled=true; document.getElementById('sowStop').disabled=false;
+    timer=setInterval(()=>{const s=syms[Math.floor(Math.random()*syms.length)];rows.set(s,mk(s));render(s);},1100);
+  };
+  document.getElementById('sowStop').onclick=()=>{clearInterval(timer);document.getElementById('sowStart').disabled=false;document.getElementById('sowStop').disabled=true;};
+}});
+
+/* ---------- 8. COMMAND ---------- */
+C({id:'command',group:'core',icon:'🎛️',title:'Command',sub:'The remote control: full power over what you ask AMPS to do.',
+render:()=>`
+  <div class="analogy">🎛️ <b>Two ways to drive AMPS.</b> Shortcuts like <code class="inline">subscribe()</code> are the car's cruise-control buttons — easy. The <b>Command</b> object is the full dashboard — every dial (filter, options, batch size) in your hands. 60East recommends Command for anything that receives messages.</div>
+  <p class="body">Toggle the options below and watch the equivalent code build itself.</p>
+  <div class="card">
+    <h2>🎛️ Build a subscription command</h2>
+    <div class="grid-form">
+      <div><label class="fld">Command</label><select id="c_cmd"><option>subscribe</option><option>sow</option><option>sow_and_subscribe</option><option>delta_subscribe</option></select></div>
+      <div><label class="fld">Topic</label><input id="c_top" value="ORDERS"></div>
+      <div><label class="fld">Filter (optional)</label><input id="c_fil" value="/status = 'OPEN'"></div>
+    </div>
+    <label style="font-size:13px;display:flex;align-items:center;gap:8px;margin:4px 0"><input type="checkbox" id="c_oof" style="width:auto"> include <code class="inline">oof</code> option (get notified when rows drop out)</label>
+    <label style="font-size:13px;display:flex;align-items:center;gap:8px;margin:4px 0 14px"><input type="checkbox" id="c_batch" style="width:auto"> set batch size to 50 (snapshot delivery chunk)</label>
+    <p class="hint">Equivalent AMPS JavaScript code:</p>
+    <pre id="c_out"></pre>
+  </div>
+  <div class="note blue">ℹ️ <b>subscribe()</b> is just a friendly shortcut that builds a <b>Command</b> for you under the hood. Same engine, less typing.</div>
+`,init:()=>{
+  const g=id=>document.getElementById(id);
+  const build=()=>{
+    const cmd=g('c_cmd').value, top=g('c_top').value, fil=g('c_fil').value.trim();
+    let opts=[]; if(g('c_oof').checked)opts.push('oof');
+    let code=`const cmd = new Command('${cmd}')\n  .topic('${top}')`;
+    if(fil) code+=`\n  .filter("${fil}")`;
+    if(opts.length) code+=`\n  .options('${opts.join(',')}')`;
+    if(g('c_batch').checked) code+=`\n  .batchSize(50)`;
+    code+=`\n\nconst id = await client.execute(cmd, onMessage)`;
+    return code;
+  };
+  const refresh=()=>g('c_out').innerHTML='<span class="j-str">'+esc(build()).replace(/'([^']*)'/g,'<span class="j-str">\'$1\'</span>')+'</span>';
+  ['c_cmd','c_top','c_fil','c_oof','c_batch'].forEach(i=>{g(i).addEventListener('input',refresh);g(i).addEventListener('change',refresh);});
+  refresh();
+}});
+
+/* ---------- 9. OOF ---------- */
+C({id:'oof',group:'adv',icon:'👻',title:'Out-of-Focus (OOF)',sub:'AMPS tells you when a row should LEAVE your screen.',
+render:()=>`
+  <div class="analogy">👻 <b>OOF = "this one's not yours anymore."</b> You subscribed to OPEN orders. An order gets FILLED — it's no longer OPEN, so it shouldn't be on your screen. AMPS sends an <b>OOF</b> ("out of focus") message so you know to <b>remove the row</b>. Without OOF your screen would show stale, already-done orders forever.</div>
+  <p class="body">OOF happens when a record (1) is deleted, (2) expires, or (3) changes so it no longer matches your filter. You opt in with the <code class="inline">oof</code> option on a <code class="inline">sow_and_subscribe</code>.</p>
+  <div class="card">
+    <h2>👻 Open-orders blotter — filter <code class="inline">/status = 'OPEN'</code></h2>
+    <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+      <button class="btn green" id="oofLoad">📸 Load open orders</button>
+      <button class="btn amber" id="oofFill" disabled>✅ Fill a random order (triggers OOF)</button>
+      <button class="btn" id="oofNew" disabled>➕ New order arrives</button>
+    </div>
+    <table><thead><tr><th>Order</th><th>Symbol</th><th>Qty</th><th>Side</th><th>Status</th></tr></thead><tbody id="oofBody">
+      <tr><td colspan="5" class="hint" style="padding:16px">Load the open orders, then fill one and watch it get an OOF and slide out.</td></tr></tbody></table>
+    <div id="oofLog" style="margin-top:10px"></div>
+  </div>
+  <div class="note amber">⚠️ Beginner trap: people forget OOF and their dashboards fill with stale rows. OOF is what keeps a live filtered view <b>honest</b>.</div>
+`,init:()=>{
+  const body=document.getElementById('oofBody'), log=document.getElementById('oofLog');
+  const rows=new Map(); let seq=100;
+  const syms=['AAPL','MSFT','GE','TSLA','JPM','NVDA'];
+  const mk=()=>{const id='ORD-'+(seq++);return [id,{orderId:id,Symbol:syms[Math.floor(Math.random()*syms.length)],qty:Math.floor((1+Math.random()*20))*100,TradeSide:Math.random()<.5?'B':'S',status:'OPEN',TradePrice:Number((50+Math.random()*400).toFixed(2))}];};
+  const note=(t,cls)=>{log.innerHTML=`<div class="note bare ${cls}" style="margin:0">${t}</div>`;setTimeout(()=>{log.innerHTML='';},2600);};
+  const render=(flash,drop)=>{
+    body.innerHTML='';
+    for(const [id,o] of rows){
+      const tr=document.createElement('tr');tr.className='row-hover'+(id===flash?' flash':'');
+      tr.innerHTML=`<td class="click">${id}</td><td><b>${o.Symbol}</b></td><td>${o.qty.toLocaleString()}</td><td><span class="pill ${o.TradeSide==='B'?'b':'s'}">${o.TradeSide==='B'?'BUY':'SELL'}</span></td><td><span class="pill open">OPEN</span></td>`;
+      tr.onclick=()=>openPayload(id,o,'An open order on the ORDERS topic.');
+      body.appendChild(tr);
+    }
+  };
+  document.getElementById('oofLoad').onclick=()=>{rows.clear();for(let i=0;i<4;i++){const [id,o]=mk();rows.set(id,o);}render();document.getElementById('oofFill').disabled=false;document.getElementById('oofNew').disabled=false;note('📸 Snapshot delivered: 4 OPEN orders.','green');};
+  document.getElementById('oofNew').onclick=()=>{const [id,o]=mk();rows.set(id,o);render(id);note('🟢 <b>p</b> (publish): new order '+id+' arrived and matches the filter → added.','green');};
+  document.getElementById('oofFill').onclick=()=>{
+    const keys=[...rows.keys()];if(!keys.length){note('No orders to fill — load some first.','amber');return;}
+    const id=keys[Math.floor(Math.random()*keys.length)]; const o=rows.get(id);
+    // animate drop
+    const tr=[...body.children].find(r=>r.firstChild&&r.firstChild.textContent===id);
+    if(tr){tr.classList.add('drop');}
+    note('👻 <b>OOF</b>: '+id+' was FILLED → no longer matches <code>/status=OPEN</code> → remove the row.','amber');
+    setTimeout(()=>{rows.delete(id);render();},950);
+  };
+}});
+
+/* ---------- 10. DELTA ---------- */
+C({id:'delta',group:'adv',icon:'📉',title:'Delta Messaging',sub:'Send only the field that changed — not the whole record.',
+render:()=>`
+  <div class="analogy">📝 <b>Delta = "just the edit, not the whole document."</b> If only the price changed, why resend the symbol, exchange, size, timestamps and 20 other fields? A <b>delta publish</b> sends only what changed. On a busy feed that's a huge bandwidth win.</div>
+  <p class="body">Compare a full publish vs a delta publish for a price tick where <b>only the price moved</b>.</p>
+  <div class="card">
+    <h2>📉 Full vs Delta — same price change</h2>
+    <button class="btn" id="dGo">🔁 Price ticks up by $0.05</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px">
+      <div>
+        <p style="font-weight:700;font-size:13px;margin:0 0 6px">📦 Full publish (whole record)</p>
+        <pre id="dFull" style="font-size:11.5px"></pre>
+      </div>
+      <div>
+        <p style="font-weight:700;font-size:13px;margin:0 0 6px;color:#16a34a">⚡ Delta publish (changed field only)</p>
+        <pre id="dDelta" style="font-size:11.5px"></pre>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <div class="wire"><span style="width:90px;font-size:12px">Full:</span><div class="bar" id="barFull" style="background:#64748b;width:100%">~220 bytes</div></div>
+      <div class="wire"><span style="width:90px;font-size:12px">Delta:</span><div class="bar" id="barDelta" style="background:#16a34a;width:18%">~38 bytes</div></div>
+      <p class="progress" id="dSave" style="color:#16a34a"></p>
+    </div>
+  </div>
+  <div class="note green">✅ Subscribers can also <b>delta-subscribe</b> to receive only changes. Less data over the wire = snappier UI, especially for wide records that tick fast.</div>
+`,init:()=>{
+  let price=192.45;
+  const full=()=>({MsgType:"TRADE",Symbol:"AAPL",ExchangeID:"NASDAQ",TradePrice:price,TradeSize:2500,TradeSide:"B",SourceTimestamp_ns:1718483076123456789,Derived:{TodayVWAP:192.12,TotalDayVolume:15600000}});
+  const show=()=>{document.getElementById('dFull').innerHTML=jsonHTML(full());document.getElementById('dDelta').innerHTML=jsonHTML({Symbol:"AAPL",TradePrice:price});};
+  show();
+  document.getElementById('dGo').onclick=()=>{price=Number((price+0.05).toFixed(2));show();
+    document.getElementById('dSave').textContent='💸 Delta sent ~83% less data for the exact same update.';
+    document.getElementById('barDelta').style.width='18%';
+  };
+}});
+
+/* ---------- 11. TRANSACTION LOG / REPLAY ---------- */
+C({id:'txlog',group:'adv',icon:'⏪',title:'Transaction Log & Replay',sub:'A time machine: replay past messages from any point.',
+render:()=>`
+  <div class="analogy">⏪ <b>Transaction Log = DVR for your data.</b> AMPS can record every message. Later you can "rewind" and <b>replay</b> from any bookmark — last night 9:30am, or the exact moment before a glitch. New apps can catch up on everything they missed while offline.</div>
+  <p class="body">You subscribe with a <b>bookmark</b> (a point in time). AMPS replays stored messages from there, then seamlessly continues live. Drag the scrubber to pick a start point and press play.</p>
+  <div class="card">
+    <h2>⏪ Replay the trade tape</h2>
+    <label class="fld">Start replay from:</label>
+    <input type="range" id="txRange" min="0" max="7" value="0" style="width:100%">
+    <p class="hint" id="txWhen">Bookmark: 09:30:00 — market open (replay everything)</p>
+    <div style="display:flex;gap:10px;margin:10px 0"><button class="btn green" id="txPlay">▶ Replay from bookmark</button><button class="btn ghost" id="txLive" disabled>⏭ Catch up to LIVE</button></div>
+    <div class="screen" id="txOut" style="min-height:150px;background:#06240f;color:#86efac">// pick a bookmark and press replay</div>
+  </div>
+  <div class="note blue">ℹ️ This is why banks love AMPS for audit & recovery: every message is replayable. A crashed dashboard reconnects and <b>replays exactly what it missed</b> — no gaps.</div>
+`,init:()=>{
+  const TAPE=[
+    ['09:30:01','AAPL','BUY',192.10],['09:31:14','MSFT','SELL',414.80],['09:33:02','GE','BUY',165.05],
+    ['09:35:47','TSLA','SELL',244.30],['09:40:11','JPM','BUY',201.55],['09:44:23','AAPL','BUY',192.66],
+    ['09:50:09','NVDA','SELL',1180.40],['09:58:51','AAPL','SELL',193.02]
+  ];
+  const range=document.getElementById('txRange'), when=document.getElementById('txWhen'), out=document.getElementById('txOut');
+  range.oninput=()=>{const i=+range.value;when.textContent='Bookmark: '+TAPE[i][0]+' — replay '+(TAPE.length-i)+' stored message(s) from here';};
+  document.getElementById('txPlay').onclick=()=>{
+    const start=+range.value; out.textContent='⏪ replaying from bookmark '+TAPE[start][0]+'...\n'; let i=start;
+    document.getElementById('txLive').disabled=false;
+    const t=setInterval(()=>{ if(i>=TAPE.length){clearInterval(t);out.textContent+='\n✅ caught up — now receiving LIVE messages';return;}
+      const [tm,s,sd,pr]=TAPE[i];out.textContent+=`[replay ${tm}] ${s} ${sd} @ $${pr}\n`;i++;
+    },550);
+  };
+  document.getElementById('txLive').onclick=()=>{out.textContent+='\n⏭ jumped to LIVE feed.';};
+  range.oninput();
+}});
+
+/* ---------- 12. QUEUES ---------- */
+C({id:'queues',group:'adv',icon:'🎫',title:'Message Queues',sub:'Pub/sub = everyone gets a copy. Queue = one worker per message.',
+render:()=>`
+  <div class="analogy">🎫 <b>Pub/sub vs Queue = TV broadcast vs a deli ticket counter.</b> In pub/sub, every subscriber gets <b>every</b> message (like a TV channel — everyone sees the same show). In a <b>queue</b>, each message goes to exactly <b>one</b> worker (like deli tickets — each customer served once). Queues are for sharing work, not broadcasting.</div>
+  <p class="body">Use a queue when a job must be done <b>once</b> — e.g. settle this trade, send this confirmation. Three workers, but each task handled by only one.</p>
+  <div class="card">
+    <h2>🎫 Watch a queue distribute work</h2>
+    <button class="btn" id="qGo">➕ Add 6 tasks to the queue</button>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px">
+      <div class="dash"><div class="dash-top"><h4>👷 Worker 1</h4></div><div class="screen" id="w1">idle</div></div>
+      <div class="dash"><div class="dash-top"><h4>👷 Worker 2</h4></div><div class="screen" id="w2">idle</div></div>
+      <div class="dash"><div class="dash-top"><h4>👷 Worker 3</h4></div><div class="screen" id="w3">idle</div></div>
+    </div>
+    <p class="progress" id="qCount" style="margin-top:10px"></p>
+  </div>
+  <div class="note green">✅ Same AMPS engine, different delivery promise: pub/sub <b>fans out</b> (copies to all), a queue <b>load-balances</b> (one consumer per message, processed exactly once).</div>
+`,init:()=>{
+  const tasks=['Settle TRD-1','Confirm TRD-2','Settle TRD-3','Email TRD-4','Settle TRD-5','Confirm TRD-6'];
+  document.getElementById('qGo').onclick=()=>{
+    ['w1','w2','w3'].forEach(w=>document.getElementById(w).textContent='idle');
+    let i=0; document.getElementById('qCount').textContent='';
+    const t=setInterval(()=>{ if(i>=tasks.length){clearInterval(t);document.getElementById('qCount').textContent='✅ All 6 tasks done — each handled by exactly ONE worker.';return;}
+      const w='w'+((i%3)+1); document.getElementById(w).textContent='✔ '+tasks[i]; i++;
+    },500);
+  };
+}});
+
+/* ---------- P1. CONNECTING & LOGON ---------- */
+const ENTITLEMENTS={
+  trader:{MARKET_DATA:true,ORDERS:true,TRADES:true,RISK:false},
+  riskmgr:{MARKET_DATA:true,ORDERS:false,TRADES:true,RISK:true},
+  admin:{MARKET_DATA:true,ORDERS:true,TRADES:true,RISK:true}
+};
+C({id:'connect',group:'prod',icon:'🔌',title:'Connecting & Logon',sub:'The address + your badge: how your app gets in.',
+render:()=>`
+  <div class="analogy">🔑 <b>Connecting is like badging into the office.</b> You give the building <b>address</b> (the connection URI) and swipe your <b>badge</b> (username/password). Security checks the badge and decides which <b>rooms</b> (topics) you may enter. No badge, no entry — and your badge might open fewer doors than a colleague's.</div>
+  <p class="body">A URI has three parts: <b>transport</b> (<code class="inline">wss</code> = secure WebSocket) + <b>address</b> (host:port) + <b>message type</b> (json, fix…). Build one and "log on" below — then see which topics your badge unlocks.</p>
+  <div class="card">
+    <h2>🔌 Build your connection</h2>
+    <div class="grid-form">
+      <div><label class="fld">Transport</label><select id="cn_tr"><option>wss</option><option>ws</option></select></div>
+      <div><label class="fld">Host</label><input id="cn_host" value="amps-dev.bank.com"></div>
+      <div><label class="fld">Port</label><input id="cn_port" value="9007"></div>
+      <div><label class="fld">Message type</label><select id="cn_mt"><option>json</option><option>fix</option><option>xml</option><option>bson</option></select></div>
+      <div><label class="fld">Log on as</label><select id="cn_user"><option value="trader">trader</option><option value="riskmgr">riskmgr</option><option value="admin">admin</option></select></div>
+    </div>
+    <p class="hint">Your connection URI:</p>
+    <pre id="cn_uri"></pre>
+    <p class="hint" style="margin-top:10px">The equivalent code:</p>
+    <pre id="cn_code"></pre>
+    <button class="btn" id="cn_go" style="margin-top:12px">🔑 Connect &amp; log on</button>
+    <div id="cn_result" style="margin-top:14px"></div>
+  </div>
+  <div class="note blue">Two must-knows: give every client a <b>unique name</b> (AMPS uses it to spot duplicate messages), and in production always use <code class="inline">wss</code> (encrypted). Ask your team for the real host, port, and credentials.</div>
+`,init:()=>{
+  const g=id=>document.getElementById(id);
+  const uri=()=>g('cn_tr').value+'://'+g('cn_host').value+':'+g('cn_port').value+'/amps/'+g('cn_mt').value;
+  const refresh=()=>{
+    g('cn_uri').innerHTML='<span class="j-str">'+uri()+'</span>';
+    g('cn_code').textContent="const client = new Client('orders-ui-7f3a')\nawait client.connect('"+uri()+"')\nawait client.logon('"+g('cn_user').value+"', '••••')";
+  };
+  ['cn_tr','cn_host','cn_port','cn_mt','cn_user'].forEach(i=>{g(i).addEventListener('input',refresh);g(i).addEventListener('change',refresh);});
+  refresh();
+  g('cn_go').onclick=()=>{
+    const u=g('cn_user').value, ent=ENTITLEMENTS[u];
+    const rows=Object.keys(ent).map(t=>'<tr><td><b>'+t+'</b></td><td>'+(ent[t]?'<span class="ent-ok">✓ allowed</span>':'<span class="ent-no">✗ denied</span>')+'</td></tr>').join('');
+    g('cn_result').innerHTML='<div class="note bare green" style="margin:0 0 10px">✓ Connected to '+g('cn_host').value+' and logged on as <b>'+u+'</b>.</div><p class="hint">What this badge can see (entitlements):</p><table><thead><tr><th>Topic</th><th>Access</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  };
+}});
+
+/* ---------- P2. MESSAGE TYPES ---------- */
+const MTYPES={
+  json:'{ "Symbol": "AAPL", "TradePrice": 192.45, "TradeSize": 2500, "TradeSide": "B" }',
+  fix:'8=FIX.4.2 | 35=D | 55=AAPL | 44=192.45 | 38=2500 | 54=1',
+  xml:'<Trade>\n  <Symbol>AAPL</Symbol>\n  <TradePrice>192.45</TradePrice>\n  <TradeSize>2500</TradeSize>\n  <TradeSide>B</TradeSide>\n</Trade>'
+};
+C({id:'msgtypes',group:'prod',icon:'🌐',title:'Message Types',sub:'Same trade, different languages: JSON, FIX, XML…',
+render:()=>`
+  <div class="analogy">🗣️ <b>A topic speaks one language.</b> The <i>same</i> trade can be written as JSON (easy for browsers), FIX (the trading world's terse shorthand), or XML. You pick the language when you connect — it's the last part of the URI. Same meaning, different format on the wire.</div>
+  <p class="body">Click each format to see the exact same AAPL trade written three ways:</p>
+  <div class="card">
+    <h2>🌐 One trade, three formats</h2>
+    <div class="tabs" id="mt_tabs"></div>
+    <pre id="mt_out"></pre>
+    <p class="hint" id="mt_note" style="margin-top:10px"></p>
+  </div>
+  <div class="note amber">Heads-up for banks: <b>FIX</b> is everywhere in trading. The AMPS client parses it for you, so you still work with fields — you just need to know which message type your team's topic uses. The same topic name on a JSON port vs an XML port are <b>different topics</b>.</div>
+`,init:()=>{
+  const tabs=document.getElementById('mt_tabs'), out=document.getElementById('mt_out'), note=document.getElementById('mt_note');
+  const NOTES={json:"Browser-friendly — what you'll use most on the frontend.",fix:"Tag=value pairs. 35=D means a new order; 55=Symbol; 44=Price; 38=Size; 54=Side (1=Buy).",xml:"Verbose but human-readable. Common in older enterprise systems."};
+  Object.keys(MTYPES).forEach((k,i)=>{
+    const b=document.createElement('button');b.className='tab'+(i===0?' active':'');b.textContent=k.toUpperCase();
+    b.onclick=()=>{[...tabs.children].forEach(c=>c.classList.remove('active'));b.classList.add('active');out.textContent=MTYPES[k];note.textContent=NOTES[k];};
+    tabs.appendChild(b); if(i===0){out.textContent=MTYPES[k];note.textContent=NOTES[k];}
+  });
+}});
+
+/* ---------- P3. ERROR HANDLING ---------- */
+const ERRORS={
+  drop:{title:'🔌 Connection drops',err:"Error: Disconnected from wss://amps-dev:9007 (network blip)",fix:"AMPS fires a disconnect handler. With an HAClient it auto-reconnects (next section). Show a 'reconnecting…' banner — don't crash the screen."},
+  bad:{title:'📩 A bad message arrives',err:"MessageHandlerError: cannot parse body for sub 'orders-ui'",fix:"Wrap your onMessage logic in try/catch. One bad message must NOT kill the whole subscription — log it and keep going."},
+  logon:{title:'🚫 Logon rejected',err:"LogonError: authentication failed for user 'trader'",fix:"Catch it on connect()/logon(). Show a clear 'check credentials / entitlements' message. Never retry blindly in a tight loop."}
+};
+C({id:'errors',group:'prod',icon:'🚑',title:'Error Handling',sub:'Your seatbelt: decide what happens when things break.',
+render:()=>`
+  <div class="analogy">🚗 <b>Error handling is a seatbelt.</b> Networks blip, a message arrives malformed, a logon gets rejected. Without handlers your app just crashes. With them, <i>you</i> decide what happens — show a banner, retry, skip the bad message — and the screen stays alive.</div>
+  <p class="body">Click a thing-that-goes-wrong to see the error and the recommended response:</p>
+  <div class="card">
+    <h2>🚑 Simulate a failure</h2>
+    <div class="chips" id="er_chips"></div>
+    <div id="er_out" style="margin-top:12px"></div>
+  </div>
+  <div class="note blue">There are two families of errors: <b>connection errors</b> (the link to AMPS) and <b>message/handler errors</b> (one message went wrong). Handle them separately, and never silently swallow an error — a quiet failure on a trading screen is dangerous.</div>
+`,init:()=>{
+  const chips=document.getElementById('er_chips'), out=document.getElementById('er_out');
+  Object.keys(ERRORS).forEach((k,i)=>{
+    const b=document.createElement('button');b.className='chip';b.textContent=ERRORS[k].title;
+    b.onclick=()=>{const e=ERRORS[k];[...chips.children].forEach(c=>c.style.borderColor='#cbd5e1');b.style.borderColor='#2563eb';
+      out.innerHTML='<pre style="background:#3b0d0d;color:#fca5a5">'+esc(e.err)+'</pre><div class="note green" style="margin-top:10px"><b>What to do:</b> '+e.fix+'</div>';};
+    chips.appendChild(b); if(i===0)b.click();
+  });
+}});
+
+/* ---------- P4. HIGH AVAILABILITY ---------- */
+C({id:'ha',group:'prod',icon:'🛟',title:'High Availability & Reconnect',sub:'Backup generators: stay live when a server dies.',
+render:()=>`
+  <div class="analogy">🏥 <b>HA is a hospital's backup generator.</b> One AMPS server can go down (maintenance, crash). A High-Availability client keeps a list of servers and, the instant the primary dies, <b>fails over</b> to a backup and re-runs your subscription — so the trader's screen never goes dark. Lights flicker for a second, then everything's back.</div>
+  <p class="body">Press "Kill primary" and watch the client recover on its own:</p>
+  <div class="card">
+    <h2>🛟 Failover in action</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <div class="srv up" id="srvP"><b>Primary</b><br><span id="srvPs">● LIVE — you are here</span></div>
+      <div class="srv standby" id="srvB"><b>Backup</b><br><span id="srvBs">standby</span></div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" style="background:#dc2626" id="ha_kill">💥 Kill primary</button><button class="btn ghost" id="ha_reset" disabled>↺ Restore</button></div>
+    <div class="screen live" id="ha_log" style="margin-top:14px;min-height:110px">// your screen is connected to the primary and receiving data</div>
+  </div>
+  <pre style="margin-top:14px">const client = new HAClient('orders-ui')
+client.connect('wss://primary:9007/amps/json',
+               'wss://backup:9007/amps/json')   // failover list</pre>
+  <div class="note green">In production you use an <b>HAClient</b> with a server list. On reconnect, a <code class="inline">sow_and_subscribe</code> cleanly re-snapshots so you don't miss or double-count anything. Pair it with a <b>bookmark store</b> to replay the exact messages missed during the switchover.</div>
+`,init:()=>{
+  const g=id=>document.getElementById(id), log=g('ha_log');
+  const line=t=>{log.textContent=t+'\n'+log.textContent;};
+  g('ha_kill').onclick=()=>{
+    g('ha_kill').disabled=true;
+    g('srvP').className='srv down'; g('srvPs').textContent='✗ DOWN';
+    log.textContent='💥 primary lost! detecting…';
+    setTimeout(()=>line('↻ failing over to backup…'),500);
+    setTimeout(()=>{g('srvB').className='srv up';g('srvBs').textContent='● LIVE — failover complete';line('✓ reconnected to backup');},1100);
+    setTimeout(()=>{line('📸 re-running sow_and_subscribe — snapshot restored');line('● back to LIVE — trader saw a ~1.5s flicker, no data lost');g('ha_reset').disabled=false;},1700);
+  };
+  g('ha_reset').onclick=()=>{
+    g('srvP').className='srv up';g('srvPs').textContent='● LIVE — you are here';
+    g('srvB').className='srv standby';g('srvBs').textContent='standby';
+    g('ha_kill').disabled=false;g('ha_reset').disabled=true;
+    log.textContent='// your screen is connected to the primary and receiving data';
+  };
+}});
+
+/* ---------- R1. CHEAT SHEET ---------- */
+C({id:'cheatsheet',group:'review',icon:'📋',title:'Cheat Sheet',sub:'Every command & gotcha on one printable page.',
+render:()=>`
+  <div class="analogy">📋 <b>Your desk reference.</b> Everything from this whole playground, condensed to one page you can print or save as PDF and keep next to your keyboard. When you forget the exact syntax, look here — not Google.</div>
+  <div style="margin:6px 0 16px"><button class="btn" onclick="window.print()">🖨️ Print / Save as PDF</button></div>
+  <div class="cheat-cols">
+    <div class="cheat-box"><h4>The one idea</h4><p style="font-size:13px;margin:0">Publishers send to a <b>topic</b> without knowing who listens. Subscribers ask a topic for what they want (optionally <b>filtered</b>). The engine routes it. You mostly <b>subscribe &amp; render</b>.</p></div>
+    <div class="cheat-box"><h4>Connection URI</h4><pre>wss://amps-dev:9007/amps/json</pre><ul><li><code class="inline">wss</code>=secure (prod), <code class="inline">ws</code>=plain</li><li>type: json, fix, xml, bson…</li></ul></div>
+    <div class="cheat-box"><h4>Connect &amp; log on</h4><pre>const client = new Client('orders-ui-7f3a')
+await client.connect('wss://host:9007/amps/json')
+await client.logon('user', 'pass')</pre></div>
+    <div class="cheat-box"><h4>Publish</h4><pre>client.publish('MARKET_DATA',
+  { Symbol:'AAPL', TradePrice:192.45 })</pre></div>
+    <div class="cheat-box"><h4>Subscribe + filter</h4><pre>const cmd = new Command('subscribe')
+  .topic('ORDERS')
+  .filter("/Symbol = 'AAPL' AND /Price > 100")
+await client.execute(cmd, onMsg)</pre></div>
+    <div class="cheat-box"><h4>Live dashboard (SOW)</h4><pre>new Command('sow_and_subscribe')
+  .topic('orders')
+  .filter("/status = 'OPEN'")
+  .options('oof')</pre></div>
+    <div class="cheat-box"><h4>Message commands</h4>
+      <table><tr><th>cmd</th><th>action</th></tr>
+      <tr><td><code class="inline">group_begin</code></td><td>snapshot starts</td></tr>
+      <tr><td><code class="inline">sow</code></td><td>existing record → add row</td></tr>
+      <tr><td><code class="inline">p</code></td><td>live update → add/update</td></tr>
+      <tr><td><code class="inline">oof</code></td><td>left filter → <b>remove row</b></td></tr>
+      <tr><td><code class="inline">group_end</code></td><td>snapshot done</td></tr></table>
+      <pre>m.header.command()  m.header.sowKey()  m.data</pre></div>
+    <div class="cheat-box"><h4>Filter operators</h4><ul>
+      <li><code class="inline">= &lt;&gt; &lt; &gt; &lt;= &gt;=</code> compare</li>
+      <li><code class="inline">AND OR NOT ( )</code> logic</li>
+      <li><code class="inline">LIKE</code> regex · <code class="inline">BEGINS WITH</code> prefix</li>
+      <li>fields: <code class="inline">/Symbol</code>, <code class="inline">/Derived/TodayVWAP</code></li></ul></div>
+    <div class="cheat-box"><h4>Power features</h4><ul>
+      <li><b>Delta</b>: send only changed fields</li>
+      <li><b>Replay</b>: bookmark subscribe = time machine</li>
+      <li><b>Queue</b>: one consumer per message</li>
+      <li><b>HA</b>: <code class="inline">HAClient</code> auto-fails-over</li></ul></div>
+    <div class="cheat-box"><h4>⚠️ Gotchas</h4><ul>
+      <li>Unique client name (dup detection)</li>
+      <li>Unsubscribe/disconnect on unmount</li>
+      <li>Throttle rendering (1000s msg/sec)</li>
+      <li>Filters run server-side — don't re-filter</li>
+      <li>Handle OOF or rows go stale</li>
+      <li>wss + HAClient in prod</li>
+      <li>Never swallow errors</li></ul></div>
+    <div class="cheat-box"><h4>Ask your team lead for</h4><ul>
+      <li>Dev connection URI</li><li>Topic names + schemas</li>
+      <li>Which topics are SOW-enabled</li><li>Auth + your entitlements</li></ul></div>
+  </div>
+`,init:()=>{}});
+
+/* ---------- R2. QUIZ ---------- */
+const QUIZ=[
+  {topic:'Pub/Sub',q:'In publish/subscribe, does the publisher know who will receive its message?',
+   opts:['No — it just sends to a topic; AMPS routes it','Yes, it lists every subscriber by name','Only subscribers who are currently online','It emails each subscriber'],
+   correct:'No — it just sends to a topic; AMPS routes it',
+   exp:'The publisher only sends to a topic. AMPS delivers to whoever subscribed. That decoupling is the whole idea of pub/sub.'},
+  {topic:'Topic',q:'What is a "topic" in AMPS?',
+   opts:['A named channel that messages are sent to and received from','A database table','A user login account','A type of error'],
+   correct:'A named channel that messages are sent to and received from',
+   exp:'A topic is like a TV channel — publishers send to it, subscribers receive from it.'},
+  {topic:'Message',q:'The trade data you actually render lives in…',
+   opts:['message.data','message.body.text','message.payload.raw','message.get()'],
+   correct:'message.data',
+   exp:'message.data is the JSON body. message.header.command() tells you what KIND of message it is.'},
+  {topic:'Subscribe',q:'Once you subscribe to a topic, messages are…',
+   opts:['pushed to you automatically as they arrive','fetched only when you ask each time','emailed once a day','saved to a file you open later'],
+   correct:'pushed to you automatically as they arrive',
+   exp:'Subscriptions are push-based and live. Your handler fires once per arriving message until you unsubscribe.'},
+  {topic:'Publish',q:'A publisher\'s entire job is to…',
+   opts:['build a message and send it to a topic','open a connection to every subscriber','poll the database for changes','render the UI'],
+   correct:'build a message and send it to a topic',
+   exp:'It never addresses subscribers. Build message → send to topic → done.'},
+  {topic:'Content Filtering',q:'Where does AMPS content filtering run?',
+   opts:['On the AMPS server, before sending to you','In your browser, after you receive everything','On a separate proxy server','Inside the database'],
+   correct:'On the AMPS server, before sending to you',
+   exp:'Server-side filtering means you only receive matches — less bandwidth, simpler client code.'},
+  {topic:'SOW',q:'State of the World (SOW) keeps…',
+   opts:['the latest message per key (like a live table)','every message ever published, forever','only error messages','nothing — AMPS is stateless'],
+   correct:'the latest message per key (like a live table)',
+   exp:'SOW is a live "latest record per key" store, so your dashboard is full the instant it loads.'},
+  {topic:'Message Types',q:'Which message format is the trading industry\'s standard shorthand?',
+   opts:['FIX','JSON','XML','CSV'],
+   correct:'FIX',
+   exp:'FIX is everywhere in trading. The AMPS client parses it for you so you still work with fields.'},
+  {topic:'Connecting',q:'In wss://host:9007/amps/json, what is "json"?',
+   opts:['the message type for this connection','the password','the topic name','the client name'],
+   correct:'the message type for this connection',
+   exp:'The URI = transport + address + message type. The same topic name on a JSON vs XML port are different topics.'},
+  {topic:'SOW',q:'To get a table that is full on load AND updates live, you use…',
+   opts:['sow_and_subscribe','a plain publish','delete','logon only'],
+   correct:'sow_and_subscribe',
+   exp:'sow_and_subscribe = snapshot now + live updates forever. The backbone of bank dashboards.'},
+  {topic:'OOF',q:'An OOF (out-of-focus) message tells your app to…',
+   opts:['remove a row that no longer matches your filter','add a brand-new row','reconnect to the server','print a log line'],
+   correct:'remove a row that no longer matches your filter',
+   exp:'When a record leaves your filter (e.g. order goes OPEN→FILLED), AMPS sends OOF so you drop the row.'},
+  {topic:'Delta',q:'A delta publish sends…',
+   opts:['only the fields that changed','the whole record every time','nothing at all','just the header'],
+   correct:'only the fields that changed',
+   exp:'Deltas save bandwidth by transmitting only what changed — great for wide, fast-ticking records.'},
+  {topic:'Queues',q:'How does a queue differ from pub/sub?',
+   opts:['Queue: each message goes to exactly ONE consumer. Pub/sub: every subscriber gets a copy','They are identical','Queues are just faster pub/sub','Pub/sub stores to disk, queues do not'],
+   correct:'Queue: each message goes to exactly ONE consumer. Pub/sub: every subscriber gets a copy',
+   exp:'Pub/sub fans out (copy to all); a queue load-balances (one consumer per message, processed once).'},
+  {topic:'Command',q:'60East recommends the Command interface (over convenience methods) for…',
+   opts:['anything that receives messages','nothing, ever','only publishing','only logging'],
+   correct:'anything that receives messages',
+   exp:'Command gives full control (filter, options, batch size) and is easier to maintain for subscriptions.'},
+  {topic:'Connecting',q:'Why must every client have a unique name?',
+   opts:['AMPS uses it to detect duplicate messages and log errors','JavaScript requires it','for billing','it sets the topic'],
+   correct:'AMPS uses it to detect duplicate messages and log errors',
+   exp:'Unique client names let AMPS spot duplicates and tie errors to the right connection.'},
+  {topic:'Error Handling',q:'The two families of errors you handle separately are…',
+   opts:['connection errors and message/handler errors','syntax errors and runtime errors','404 and 500','red and yellow'],
+   correct:'connection errors and message/handler errors',
+   exp:'Connection errors (the link) vs message errors (one bad message). A bad message must not kill the subscription.'},
+  {topic:'Transaction Log',q:'The transaction log lets you…',
+   opts:['replay past messages from a bookmark (a time machine)','permanently delete messages','encrypt the topic','compress the feed'],
+   correct:'replay past messages from a bookmark (a time machine)',
+   exp:'Bookmark subscribe replays stored messages from a point in time, then continues live — great for recovery & audit.'},
+  {topic:'High Availability',q:'When the primary AMPS server dies, an HAClient…',
+   opts:['fails over to a backup and re-runs your subscription','shuts the app down','shows a 404 page','waits for a human to fix it'],
+   correct:'fails over to a backup and re-runs your subscription',
+   exp:'HAClient keeps a server list and auto-fails-over so the screen never goes dark.'},
+  {topic:'High Availability',q:'After a failover/reconnect, why is sow_and_subscribe the preferred pattern?',
+   opts:['it cleanly re-snapshots current state so you do not miss or double-count updates','it is the only command that works offline','it disables filtering','it deletes the SOW'],
+   correct:'it cleanly re-snapshots current state so you do not miss or double-count updates',
+   exp:'On reconnect it re-snapshots the world, so the UI is correct without gaps or duplicates. Pair with a bookmark store to replay anything missed.'}
+];
+C({id:'quiz',group:'review',icon:'📝',title:'Quiz',sub:'19 questions, every concept, easy → hard. Test yourself.',
+render:()=>`
+  <div class="analogy">🧠 <b>Prove it to yourself.</b> 19 questions covering every concept in this playground, ordered from easiest to hardest. You get instant feedback and an explanation after each one, then a score telling you exactly which topics to review.</div>
+  <div class="card" id="quizCard"></div>
+`,init:()=>{
+  const card=document.getElementById('quizCard');
+  let i=0, score=0, wrong=[];
+  const sh=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+  function show(){
+    if(i>=QUIZ.length) return done();
+    const item=QUIZ[i];
+    card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span class="kicker">Question '+(i+1)+' of '+QUIZ.length+'</span><span class="hint">Topic: '+item.topic+'</span></div>'
+      +'<div style="height:6px;background:#e2e8f0;border-radius:4px;margin-bottom:16px"><div style="height:6px;background:var(--blue);border-radius:4px;width:'+Math.round(i/QUIZ.length*100)+'%"></div></div>'
+      +'<h2 style="margin-top:0">'+item.q+'</h2><div id="qOpts"></div><div id="qFb" style="margin-top:14px"></div>';
+    const wrap=document.getElementById('qOpts');
+    sh(item.opts.slice()).forEach(o=>{
+      const b=document.createElement('button');b.className='quizopt';b.textContent=o;
+      b.onclick=()=>answer(o,b,item);
+      wrap.appendChild(b);
+    });
+  }
+  function answer(o,btn,item){
+    const fb=document.getElementById('qFb');
+    [...document.getElementById('qOpts').children].forEach(b=>{b.disabled=true;
+      if(b.textContent===item.correct){b.style.background='#dcfce7';b.style.borderColor='#16a34a';b.style.color='#166534';b.style.fontWeight='600';}});
+    const ok=o===item.correct;
+    if(ok)score++; else {wrong.push(item.topic);btn.style.background='#fee2e2';btn.style.borderColor='#dc2626';btn.style.color='#991b1b';}
+    fb.innerHTML='<div class="note bare '+(ok?'green':'amber')+'" style="margin:0">'+(ok?'✅ Correct! ':'❌ Not quite. ')+item.exp+'</div>'
+      +'<button class="btn" id="qNext" style="margin-top:12px">'+(i===QUIZ.length-1?'See my score →':'Next question →')+'</button>';
+    document.getElementById('qNext').onclick=()=>{i++;show();};
+  }
+  function done(){
+    const pct=Math.round(score/QUIZ.length*100);
+    const msg=pct>=85?'🏆 AMPS-ready! Excellent work.':pct>=60?'👍 Solid foundation — review the topics below and you are there.':'📚 Good start — revisit the topics below, then retake.';
+    card.innerHTML='<h2 style="margin-top:0">Your score: '+score+' / '+QUIZ.length+' ('+pct+'%)</h2><p class="body">'+msg+'</p>'
+      +(wrong.length?'<p class="hint">Topics to review: <b>'+[...new Set(wrong)].join(', ')+'</b></p>':'<p class="hint">Perfect across every single topic. 🎉</p>')
+      +'<button class="btn" id="qRetry">↺ Retake quiz</button>';
+    document.getElementById('qRetry').onclick=()=>{i=0;score=0;wrong=[];show();};
+  }
+  show();
+}});
+
+/* =========================================================================
+   ROUTER / NAV
+   ========================================================================= */
+function buildNav(){
+  const core=document.getElementById('nav-core'), adv=document.getElementById('nav-adv'), prod=document.getElementById('nav-prod'), review=document.getElementById('nav-review');
+  CONCEPTS.forEach((c,i)=>{
+    const el=document.createElement('div');el.className='navitem';el.dataset.id=c.id;el.title=c.title;
+    const n=c.group==='core'?(i+1):'';
+    el.innerHTML=`<span class="ic">${c.icon}</span><span>${c.title}</span>${n?'<span class="num">'+n+'</span>':''}`;
+    el.onclick=()=>go(c.id);
+    (c.group==='core'?core:c.group==='adv'?adv:c.group==='prod'?prod:review).appendChild(el);
+  });
+}
+function go(id){
+  const c=CONCEPTS.find(x=>x.id===id); if(!c)return;
+  document.querySelectorAll('.navitem').forEach(n=>n.classList.toggle('active',n.dataset.id===id));
+  document.getElementById('main').innerHTML=`
+    <div class="lesson-head">
+      <span class="kicker">${c.group==='core'?'Core concept':'Power feature'}</span>
+      <h1 class="title">${c.icon} ${c.title}</h1>
+      <p class="subtitle">${c.sub}</p>
+    </div>${c.render()}`;
+  if(c.init)c.init();
+  window.scrollTo(0,0);
+}
+buildNav();
+go('pubsub');
+</script>
+</body>
+</html>
