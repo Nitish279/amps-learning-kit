@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMPS Learning Kit</title>
+<style>
+  :root{--bg:#0e1116;--card:#171c24;--card2:#1e242e;--line:#2a313c;--text:#e6edf3;--muted:#9aa7b4;--accent:#4ea1ff;--accent2:#7ee787}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.6}
+  .wrap{max-width:920px;margin:0 auto;padding:48px 22px 90px}
+  header{text-align:center;margin-bottom:40px}
+  .logo{font-size:42px}
+  h1{font-size:34px;margin:10px 0 6px}
+  .tag{color:var(--muted);font-size:17px;margin:0}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:30px}
+  a.card{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;transition:transform .12s,border-color .12s,box-shadow .12s}
+  a.card:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 10px 30px rgba(78,161,255,.12)}
+  a.card.hero{grid-column:1/-1;background:linear-gradient(150deg,#1a2230,#141922)}
+  .ic{font-size:30px}
+  a.card h2{font-size:20px;margin:12px 0 6px}
+  a.card.hero h2{font-size:26px}
+  a.card p{margin:0;color:var(--muted);font-size:14.5px}
+  .open{display:inline-block;margin-top:14px;color:var(--accent);font-weight:600;font-size:14px}
+  .badge{display:inline-block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent2);background:rgba(126,231,135,.1);border:1px solid rgba(126,231,135,.3);padding:3px 10px;border-radius:999px;margin-bottom:14px}
+  footer{margin-top:46px;text-align:center;color:var(--muted);font-size:13.5px}
+  footer a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">⚡</div>
+    <span class="badge">Learn by clicking &amp; playing</span>
+    <h1>AMPS Learning Kit</h1>
+    <p class="tag">An interactive, zero-to-productive guide to the Advanced Message Processing System — for JavaScript frontend developers. No prior AMPS or trading knowledge needed.</p>
+  </header>
+
+  <div class="grid">
+    <a class="card hero" href="AMPS_Playground.html">
+      <div class="ic">🕹️</div>
+      <h2>Interactive Playground →</h2>
+      <p>The main event. Click-through lessons for every concept — pub/sub, topics, messages, content filtering, State of the World, commands, and the production features — with live diagrams, clickable payloads, a regex explorer, a message-command inspector, a quiz, and a cheat sheet. Start here.</p>
+      <span class="open">Open the playground →</span>
+    </a>
+
+    <a class="card" href="AMPS_CheatSheet.html">
+      <div class="ic">📋</div>
+      <h2>Cheat Sheet</h2>
+      <p>A printable one-page reference: commands, filter operators, and the gotchas that bite you in week one.</p>
+      <span class="open">Open →</span>
+    </a>
+
+    <a class="card" href="AMPS_Learning_Guide.md">
+      <div class="ic">📖</div>
+      <h2>Learning Guide</h2>
+      <p>A written 4-week plan with concepts, runnable JavaScript snippets, and production concerns (HA, deltas, errors).</p>
+      <span class="open">Open →</span>
+    </a>
+
+    <a class="card" href="AMPS_Interactive_Tutorial.html">
+      <div class="ic">📈</div>
+      <h2>Order-Blotter Tutorial</h2>
+      <p>An earlier interactive intro with a live, self-updating order blotter demo (snapshot + live updates + OOF).</p>
+      <span class="open">Open →</span>
+    </a>
+  </div>
+
+  <footer>
+    Built as a self-contained learning kit · works offline, no setup ·
+    based on the official <a href="https://crankuptheamps.com/clients/amps-client-javascript" target="_blank" rel="noopener">60East AMPS JavaScript docs</a>
+  </footer>
+</div>
+</body>
+</html>
