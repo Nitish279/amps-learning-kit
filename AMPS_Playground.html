@@ -1208,56 +1208,306 @@ render:()=>`
 }});
 
 /* ---------- P2. MESSAGE TYPES ---------- */
-const MTYPES={
-  json:'{ "Symbol": "AAPL", "TradePrice": 192.45, "TradeSize": 2500, "TradeSide": "B" }',
-  fix:'8=FIX.4.2 | 35=D | 55=AAPL | 44=192.45 | 38=2500 | 54=1',
-  xml:'<Trade>\n  <Symbol>AAPL</Symbol>\n  <TradePrice>192.45</TradePrice>\n  <TradeSize>2500</TradeSize>\n  <TradeSide>B</TradeSide>\n</Trade>'
-};
 C({id:'msgtypes',group:'prod',icon:'🌐',title:'Message Types',sub:'Same trade, different languages: JSON, FIX, XML…',
 render:()=>`
-  <div class="analogy">🗣️ <b>A topic speaks one language.</b> The <i>same</i> trade can be written as JSON (easy for browsers), FIX (the trading world's terse shorthand), or XML. You pick the language when you connect — it's the last part of the URI. Same meaning, different format on the wire.</div>
-  <p class="body">Click each format to see the exact same AAPL trade written three ways:</p>
+  <div class="analogy">🗣️ <b>A topic speaks one language.</b> The <i>same</i> trade can be written as <b>JSON</b> (easy for browsers), <b>FIX</b> (the trading world's terse shorthand), or <b>XML</b>. You choose the language in the <span class="tip-field" data-tip="Remember the URI from Connecting &amp; Logon — its last part (json / fix / xml) IS the message type.">connection URI</span>, and AMPS hands your code the parsed fields either way.</div>
+  <p class="body">Flip between the three tabs — it's the exact same AAPL trade each time. Hover the FIX tags to decode them, and click "Explain every field" on the JSON.</p>
   <div class="card">
     <h2>🌐 One trade, three formats</h2>
     <div class="tabs" id="mt_tabs"></div>
-    <pre id="mt_out"></pre>
-    <p class="hint" id="mt_note" style="margin-top:10px"></p>
+    <div id="mt_out"></div>
+    <p class="hint" id="mt_note" style="margin-top:12px"></p>
   </div>
-  <div class="note amber">Heads-up for banks: <b>FIX</b> is everywhere in trading. The AMPS client parses it for you, so you still work with fields — you just need to know which message type your team's topic uses. The same topic name on a JSON port vs an XML port are <b>different topics</b>.</div>
+  <div class="card">
+    <h2>🔀 Same meaning, three dialects</h2>
+    <p class="hint">How one logical field looks in each format — building this mental map is most of the job:</p>
+    <table><thead><tr><th>Means</th><th>JSON</th><th>FIX tag</th><th>XML</th></tr></thead><tbody>
+      <tr><td>What it is</td><td><code class="inline">"MsgType":"TRADE"</code></td><td><code class="inline">35=8</code></td><td><code class="inline">&lt;Trade&gt;</code></td></tr>
+      <tr><td>Ticker</td><td><code class="inline">"Symbol":"AAPL"</code></td><td><code class="inline">55</code></td><td><code class="inline">&lt;Symbol&gt;</code></td></tr>
+      <tr><td>Price</td><td><code class="inline">"TradePrice":192.45</code></td><td><code class="inline">31</code> <span class="hint">(LastPx)</span></td><td><code class="inline">&lt;TradePrice&gt;</code></td></tr>
+      <tr><td>Size</td><td><code class="inline">"TradeSize":2500</code></td><td><code class="inline">32</code> <span class="hint">(LastQty)</span></td><td><code class="inline">&lt;TradeSize&gt;</code></td></tr>
+      <tr><td>Buy / Sell</td><td><code class="inline">"TradeSide":"B"</code></td><td><code class="inline">54</code> <span class="hint">(1=Buy)</span></td><td><code class="inline">&lt;TradeSide&gt;</code></td></tr>
+    </tbody></table>
+  </div>
+  <div class="card">
+    <h2>📡 Going deeper on FIX</h2>
+    <p class="hint">Banks run almost entirely on FIX for orders and fills, so it's worth knowing well. There's a full interactive FIX cheat sheet — a live decoder, every essential tag, and the coded values — in its own section.</p>
+    <button class="btn" onclick="go('fix');return false">Open the FIX Protocol cheat sheet →</button>
+  </div>
+  <div class="note amber">⚠️ Bank reality: <b>FIX is everywhere</b> in trading, so expect to meet it. Two traps for newcomers: (1) the <b>same topic name on a JSON port vs a FIX port are different topics</b> — the message type is part of the address; (2) AMPS also speaks binary types like <code class="inline">bson</code> and <code class="inline">msgpack</code> that are faster on the wire but unreadable by eye. You pick the type once in the URI; after that the client gives you normal fields to work with.</div>
 `,init:()=>{
   const tabs=document.getElementById('mt_tabs'), out=document.getElementById('mt_out'), note=document.getElementById('mt_note');
-  const NOTES={json:"Browser-friendly — what you'll use most on the frontend.",fix:"Tag=value pairs. 35=D means a new order; 55=Symbol; 44=Price; 38=Size; 54=Side (1=Buy).",xml:"Verbose but human-readable. Common in older enterprise systems."};
-  Object.keys(MTYPES).forEach((k,i)=>{
-    const b=document.createElement('button');b.className='tab'+(i===0?' active':'');b.textContent=k.toUpperCase();
-    b.onclick=()=>{[...tabs.children].forEach(c=>c.classList.remove('active'));b.classList.add('active');out.textContent=MTYPES[k];note.textContent=NOTES[k];};
-    tabs.appendChild(b); if(i===0){out.textContent=MTYPES[k];note.textContent=NOTES[k];}
-  });
+  const TRADE={MsgType:"TRADE",Symbol:"AAPL",TradePrice:192.45,TradeSize:2500,TradeSide:"B"};
+  const FIX_TAGS={
+    "8":["BeginString","Which FIX version is being spoken — <b>FIX.4.4</b> here."],
+    "35":["MsgType","What kind of FIX message. <b>8</b> = ExecutionReport (a trade/fill); <b>D</b> = New Order Single."],
+    "55":["Symbol","The ticker — same as JSON <code>Symbol</code>."],
+    "31":["LastPx","Price this fill traded at — same as JSON <code>TradePrice</code>."],
+    "32":["LastQty","Shares in this fill — same as JSON <code>TradeSize</code>."],
+    "54":["Side","<b>1</b> = Buy, <b>2</b> = Sell — same as JSON <code>TradeSide</code>."]
+  };
+  const FIXSTR="8=FIX.4.4 | 35=8 | 55=AAPL | 31=192.45 | 32=2500 | 54=1";
+  const TAGSTYLE="display:inline-block;margin:3px;padding:4px 9px;background:#0f172a;color:#e2e8f0;border:1px solid #3b82f6;border-radius:7px;font-family:monospace;font-size:13px;cursor:help";
+  const renderFix=()=>{
+    const parts=FIXSTR.split(" | ");
+    const chips=parts.map(p=>{const a=p.split("=");const t=a[0],v=a[1];const d=FIX_TAGS[t];
+      return '<span style="'+TAGSTYLE+'" data-tip="<b>Tag '+t+' &middot; '+(d?d[0]:"?")+'</b><br>'+(d?d[1]:"")+'">'+t+'<span style="color:#64748b;margin:0 2px">=</span>'+esc(v)+'</span>';}).join("");
+    const rows=parts.map(p=>{const a=p.split("=");const t=a[0],v=a[1];const d=FIX_TAGS[t];
+      return '<tr><td><b>'+t+'</b></td><td>'+(d?d[0]:"?")+'</td><td>'+esc(v)+'</td></tr>';}).join("");
+    return '<div style="display:flex;flex-wrap:wrap;align-items:center;margin-bottom:6px">'+chips+'</div><p class="hint">👆 Hover any tag to decode it.</p><table style="margin-top:8px"><thead><tr><th>Tag</th><th>Means</th><th>Value</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  };
+  const FORMATS={
+    json:{label:"JSON",note:"Browser-friendly — what you'll use most on the frontend. The AMPS JS client hands you a plain object.",
+      body:()=>'<pre>'+jsonHTML(TRADE)+'</pre><button class="btn" id="mt_explain" style="margin-top:10px">🔍 Explain every field</button>',
+      after:()=>{const b=document.getElementById("mt_explain");if(b)b.onclick=()=>openPayload("AAPL trade · JSON",TRADE,"The same trade, in JSON form.");}},
+    fix:{label:"FIX",note:"FIX is terse tag=value pairs — the trading world's shorthand. The AMPS client parses it into fields, so you work with values, not raw tags.",
+      body:renderFix,after:()=>{}},
+    xml:{label:"XML",note:"Verbose but human-readable. Common in older enterprise systems.",
+      body:()=>'<pre>'+esc("<Trade>\n  <Symbol>AAPL</Symbol>\n  <TradePrice>192.45</TradePrice>\n  <TradeSize>2500</TradeSize>\n  <TradeSide>B</TradeSide>\n</Trade>")+'</pre>',after:()=>{}}
+  };
+  const show=k=>{[...tabs.children].forEach(c=>c.classList.toggle("active",c.dataset.k===k));out.innerHTML=FORMATS[k].body();note.innerHTML=FORMATS[k].note;FORMATS[k].after();};
+  Object.keys(FORMATS).forEach(k=>{const b=document.createElement("button");b.className="tab";b.dataset.k=k;b.textContent=FORMATS[k].label;b.onclick=()=>show(k);tabs.appendChild(b);});
+  show("json");
+}});
+
+/* ---------- P2b. FIX PROTOCOL ---------- */
+C({id:'fix',group:'prod',icon:'🏷️',title:'FIX Protocol',sub:'The trading world\'s language — a one-stop tag & code cheat sheet.',
+render:()=>`
+  <div class="analogy">🏷️ <b>FIX is the shared language of trading.</b> Nearly every bank, broker and exchange speaks <b>FIX</b> (Financial Information eXchange) to send orders and report fills. A FIX message is just a list of <b>tag=value</b> pairs glued together — e.g. <code class="inline">55=AAPL</code> means "Symbol = AAPL". Learn the tags and you can read any order or trade on the wire.</div>
+  <p class="body">This is your one-stop FIX reference: paste a real message into the decoder, then keep the tag and code tables handy. As a frontend dev you mostly <i>read</i> FIX (orders &amp; execution reports) and map a handful of tags onto your UI.</p>
+
+  <div class="card">
+    <h2>🧬 Anatomy of a FIX message</h2>
+    <p class="hint">Every message has three parts. Real FIX separates fields with an invisible <span class="tip-field" data-tip="ASCII 0x01, the 'Start of Header' control character. It's invisible, so docs and tools show it as | or ^A. AMPS handles it for you.">SOH</span> byte; here we show it as <code class="inline">|</code>.</p>
+    <div id="fix_anatomy"></div>
+  </div>
+
+  <div class="card">
+    <h2>🔓 Live FIX decoder</h2>
+    <p class="hint">Pick a sample or paste your own FIX message (fields separated by <code class="inline">|</code> or SOH), then decode every tag — names, values and coded meanings.</p>
+    <div class="chips" id="fix_samples"></div>
+    <textarea id="fix_in" spellcheck="false" style="width:100%;min-height:80px;margin-top:10px;font-family:monospace;font-size:13px;padding:10px;border:1px solid #cbd5e1;border-radius:8px;box-sizing:border-box"></textarea>
+    <button class="btn" id="fix_go" style="margin-top:10px">🔓 Decode</button>
+    <div id="fix_out" style="margin-top:12px"></div>
+  </div>
+
+  <div class="card">
+    <h2>🏷️ Essential tags — the ones you'll actually use</h2>
+    <p class="hint">Grouped by job. The last column is what a frontend dev typically does with each tag.</p>
+    <div id="fix_ref"></div>
+  </div>
+
+  <div class="card">
+    <h2>🔢 Coded values worth memorizing</h2>
+    <p class="hint">These tags carry single letter/number codes. Here's what they decode to:</p>
+    <div id="fix_enums"></div>
+  </div>
+
+  <div class="note amber">⚠️ Frontend gotchas: (1) AMPS <b>parses FIX for you</b> — you read fields by tag number/name, not raw text. (2) Branch your UI on <b>35 MsgType</b> first, then <b>150 ExecType</b> / <b>39 OrdStatus</b> for executions. (3) Match fills back to your order with <b>11 ClOrdID</b>. (4) <b>Repeating groups</b> (e.g. 268 market-data entries, 453 parties) repeat the same tags many times — never assume a tag appears only once. (5) You can ignore <b>9 BodyLength</b> and <b>10 CheckSum</b> — plumbing the client validates. (6) Versions differ: <b>FIX.4.2</b> and <b>FIX.4.4</b> are most common; FIX 5.0 splits the session layer into <b>FIXT.1.1</b>.</div>
+`,init:()=>{
+  const FIX_DICT={
+    "8":["BeginString","FIX dialect/version (e.g. FIX.4.4).","Always the first field.","Session"],
+    "9":["BodyLength","Byte length of the message body.","Plumbing — ignore.","Session"],
+    "35":["MsgType","WHAT this message is (see codes below).","Branch your UI on this first.","Session"],
+    "49":["SenderCompID","Firm/system that sent it.","—","Session"],
+    "56":["TargetCompID","Firm/system it's addressed to.","—","Session"],
+    "34":["MsgSeqNum","Sequence number (gap detection).","Plumbing.","Session"],
+    "52":["SendingTime","UTC time the message was sent.","—","Session"],
+    "10":["CheckSum","3-digit integrity check (always last).","Plumbing — ignore.","Session"],
+    "11":["ClOrdID","YOUR client order ID.","Match exec reports back to your order.","Order"],
+    "37":["OrderID","Broker/exchange order ID.","—","Order"],
+    "55":["Symbol","Ticker, e.g. AAPL.","Primary key for UI rows.","Order"],
+    "54":["Side","Buy / Sell (see codes).","Color the row green/red.","Order"],
+    "40":["OrdType","Market / Limit / Stop (see codes).","Decides whether Price matters.","Order"],
+    "59":["TimeInForce","Day / GTC / IOC / FOK (see codes).","—","Order"],
+    "1":["Account","Account the order is for.","—","Order"],
+    "21":["HandlInst","How the order should be handled.","—","Order"],
+    "150":["ExecType","WHAT just happened to the order (see codes).","Read this first on an Execution Report.","Execution"],
+    "39":["OrdStatus","Current order state (see codes).","Drives the status badge in your blotter.","Execution"],
+    "17":["ExecID","Unique ID for this execution/fill.","—","Execution"],
+    "58":["Text","Free text — often the reject reason.","Show this on rejects.","Execution"],
+    "103":["OrdRejReason","Coded reason an order was rejected.","—","Execution"],
+    "38":["OrderQty","Quantity ordered.","—","Pricing"],
+    "44":["Price","Limit price (for limit orders).","—","Pricing"],
+    "32":["LastQty","Shares in THIS fill.","Sum across fills.","Pricing"],
+    "31":["LastPx","Price of THIS fill.","—","Pricing"],
+    "14":["CumQty","Total shares filled so far.","Use for a fill-progress bar.","Pricing"],
+    "151":["LeavesQty","Shares still open (unfilled).","—","Pricing"],
+    "6":["AvgPx","Average fill price so far.","—","Pricing"],
+    "60":["TransactTime","UTC time of the business event.","—","Pricing"],
+    "268":["NoMDEntries","Count of market-data entries (repeating group).","Loop over the entries.","MarketData"],
+    "269":["MDEntryType","Bid / Offer / Trade (see codes).","—","MarketData"],
+    "270":["MDEntryPx","Price of this market-data entry.","—","MarketData"],
+    "271":["MDEntrySize","Size of this market-data entry.","—","MarketData"],
+    "453":["NoPartyIDs","Count of parties (repeating group).","—","MarketData"]
+  };
+  const FIX_ENUMS={
+    "35":{name:"MsgType",map:{"0":"Heartbeat","1":"Test Request","A":"Logon","5":"Logout","D":"New Order Single","F":"Order Cancel Request","G":"Order Cancel/Replace","8":"Execution Report","9":"Order Cancel Reject","V":"Market Data Request","W":"Market Data Snapshot","X":"Market Data Incremental Refresh","AE":"Trade Capture Report"}},
+    "54":{name:"Side",map:{"1":"Buy","2":"Sell","3":"Buy minus","4":"Sell plus","5":"Sell short","6":"Sell short exempt"}},
+    "40":{name:"OrdType",map:{"1":"Market","2":"Limit","3":"Stop","4":"Stop Limit","P":"Pegged"}},
+    "39":{name:"OrdStatus",map:{"0":"New","1":"Partially Filled","2":"Filled","4":"Canceled","5":"Replaced","6":"Pending Cancel","8":"Rejected","A":"Pending New","C":"Expired","E":"Pending Replace"}},
+    "150":{name:"ExecType",map:{"0":"New","4":"Canceled","5":"Replaced","6":"Pending Cancel","8":"Rejected","C":"Expired","F":"Trade (fill)","I":"Order Status"}},
+    "59":{name:"TimeInForce",map:{"0":"Day","1":"Good Till Cancel (GTC)","2":"At the Opening","3":"Immediate or Cancel (IOC)","4":"Fill or Kill (FOK)","6":"Good Till Date (GTD)","7":"At the Close"}},
+    "269":{name:"MDEntryType",map:{"0":"Bid","1":"Offer / Ask","2":"Trade","4":"Opening Price","5":"Closing Price","7":"Session High","8":"Session Low"}}
+  };
+  const g=id=>document.getElementById(id);
+  const ANATOMY=[
+    ["Header","#3b82f6","Who / what / when — session plumbing.","8 BeginString · 9 BodyLength · 35 MsgType · 49 Sender · 56 Target · 34 SeqNum · 52 SendingTime"],
+    ["Body","#22c55e","The business content — the part your UI reads.","11 ClOrdID · 55 Symbol · 54 Side · 38 OrderQty · 40 OrdType · 44 Price · 150 ExecType · 39 OrdStatus · 31/32 LastPx/LastQty"],
+    ["Trailer","#f59e0b","Integrity check, always last.","10 CheckSum"]
+  ];
+  g("fix_anatomy").innerHTML=ANATOMY.map(a=>'<div style="border-left:4px solid '+a[1]+';padding:8px 12px;margin:8px 0;background:#f8fafc;border-radius:0 8px 8px 0"><b style="color:'+a[1]+'">'+a[0]+'</b> — '+a[2]+'<div class="hint" style="margin-top:4px;font-family:monospace">'+a[3]+'</div></div>').join("");
+  const SAMPLES={
+    nos:["New Order Single","8=FIX.4.4|9=176|35=D|49=BUYSIDE|56=SELLSIDE|34=2|52=20260617-14:32:01|11=ORD-10042|1=ACME-FUND|55=AAPL|54=1|38=2500|40=2|44=192.45|59=0|60=20260617-14:32:01|10=128"],
+    exec:["Execution Report (partial fill)","8=FIX.4.4|9=201|35=8|49=SELLSIDE|56=BUYSIDE|34=3|52=20260617-14:32:02|37=EX-88871|11=ORD-10042|17=FILL-5567|150=F|39=1|55=AAPL|54=1|38=2500|32=1000|31=192.45|14=1000|151=1500|6=192.45|60=20260617-14:32:02|10=201"],
+    md:["Market Data Snapshot","8=FIX.4.4|35=W|49=FEED|56=DESK|55=AAPL|268=2|269=0|270=192.44|271=800|269=1|270=192.46|271=1200|10=099"],
+    rej:["Order Rejected","8=FIX.4.4|35=8|49=SELLSIDE|56=BUYSIDE|37=EX-0|11=ORD-10043|17=REJ-1|150=8|39=8|55=AAPL|54=1|38=2500|103=3|58=Insufficient buying power|10=144"]
+  };
+  const sc=g("fix_samples");
+  Object.keys(SAMPLES).forEach(k=>{const b=document.createElement("button");b.className="chip";b.textContent=SAMPLES[k][0];b.onclick=()=>{g("fix_in").value=SAMPLES[k][1];decode();};sc.appendChild(b);});
+  const out=g("fix_out");
+  const decode=()=>{
+    const raw=g("fix_in").value||"";
+    const norm=raw.replace(/\x01/g,"|").trim();
+    if(!norm){out.innerHTML='<p class="hint">Paste a FIX message above (or pick a sample) and hit Decode.</p>';return;}
+    const pairs=norm.split("|").map(s=>s.trim()).filter(Boolean);
+    let rows="",n=0,mt="";
+    pairs.forEach(p=>{const i=p.indexOf("=");if(i<0)return;n++;
+      const t=p.slice(0,i), v=p.slice(i+1);
+      const d=FIX_DICT[t]; const name=d?d[0]:'<span class="hint">unknown tag</span>';
+      let mean=d?d[1]:"";
+      const en=FIX_ENUMS[t];
+      if(en&&en.map[v]){mean='<b>'+esc(en.map[v])+'</b>'+(d?' — '+d[1]:'');}
+      if(t==="35"&&en&&en.map[v])mt=en.map[v];
+      rows+='<tr><td><b>'+esc(t)+'</b></td><td>'+name+'</td><td><code class="inline">'+esc(v)+'</code></td><td>'+mean+'</td></tr>';
+    });
+    out.innerHTML=(mt?'<div class="note bare green" style="margin:0 0 10px">This is a <b>'+esc(mt)+'</b> message — '+n+' fields decoded.</div>':'')+'<table><thead><tr><th>Tag</th><th>Name</th><th>Value</th><th>What it means</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  };
+  g("fix_go").onclick=decode;
+  g("fix_in").value=SAMPLES.exec[1];
+  decode();
+  const CATS=[["Session","🔌 Session / header"],["Order","📝 Orders"],["Execution","✅ Executions & fills"],["Pricing","💲 Pricing & quantity"],["MarketData","📈 Market data"]];
+  let ref="";
+  CATS.forEach(c=>{const items=Object.keys(FIX_DICT).filter(t=>FIX_DICT[t][3]===c[0]);if(!items.length)return;
+    ref+='<p class="hint" style="margin:16px 0 6px;font-weight:700;color:var(--blue);font-size:13.5px">'+c[1]+'</p><table><thead><tr><th>Tag</th><th>Name</th><th>What it is</th><th>Frontend use</th></tr></thead><tbody>';
+    items.forEach(t=>{const d=FIX_DICT[t];ref+='<tr><td><b>'+t+'</b></td><td>'+d[0]+'</td><td>'+d[1]+'</td><td class="hint">'+(d[2]||'—')+'</td></tr>';});
+    ref+='</tbody></table>';});
+  g("fix_ref").innerHTML=ref;
+  let en="";
+  Object.keys(FIX_ENUMS).forEach(t=>{const e=FIX_ENUMS[t];
+    en+='<p class="hint" style="margin:16px 0 6px;font-weight:700;color:var(--blue);font-size:13.5px">Tag '+t+' · '+e.name+'</p><table><thead><tr><th>Code</th><th>Meaning</th></tr></thead><tbody>';
+    Object.keys(e.map).forEach(v=>{en+='<tr><td><code class="inline">'+v+'</code></td><td>'+e.map[v]+'</td></tr>';});
+    en+='</tbody></table>';});
+  g("fix_enums").innerHTML=en;
 }});
 
 /* ---------- P3. ERROR HANDLING ---------- */
 const ERRORS={
-  drop:{title:'🔌 Connection drops',err:"Error: Disconnected from wss://amps-dev:9007 (network blip)",fix:"AMPS fires a disconnect handler. With an HAClient it auto-reconnects (next section). Show a 'reconnecting…' banner — don't crash the screen."},
-  bad:{title:'📩 A bad message arrives',err:"MessageHandlerError: cannot parse body for sub 'orders-ui'",fix:"Wrap your onMessage logic in try/catch. One bad message must NOT kill the whole subscription — log it and keep going."},
-  logon:{title:'🚫 Logon rejected',err:"LogonError: authentication failed for user 'trader'",fix:"Catch it on connect()/logon(). Show a clear 'check credentials / entitlements' message. Never retry blindly in a tight loop."}
+  connect:{title:'Can’t connect at all',cat:'Connection',sev:'transient',
+    err:"ConnectionError: connect ECONNREFUSED amps-dev.bank.com:9007",
+    why:"Wrong host/port, the server is down, or a firewall is blocking you.",
+    user:"The whole screen has no data.",
+    fix:"Retry with a growing delay (1s, 2s, 4s…), double-check the URI, and fail over to a backup server — that is exactly what an HAClient does."},
+  drop:{title:'Connection drops mid-session',cat:'Connection',sev:'transient',
+    err:"Disconnected from wss://amps-dev:9007 (network blip)",
+    why:"A network hiccup, or the server restarted while you were live.",
+    user:"Prices freeze — the screen looks live but is stale.",
+    fix:"Register a disconnect handler, show a “reconnecting…” banner, and let the HAClient re-establish the connection and your subscriptions."},
+  logon:{title:'Logon rejected',cat:'Auth',sev:'fatal',
+    err:"LogonError: authentication failed for user 'trader'",
+    why:"Wrong username/password, or the account is disabled.",
+    user:"Login fails immediately.",
+    fix:"Catch it on logon(). Show a clear “check your credentials” message. Never retry the same bad credentials in a loop."},
+  entitle:{title:'Permission denied on a topic',cat:'Auth',sev:'fatal',
+    err:"command failed: user 'trader' is not entitled for topic 'RISK'",
+    why:"Your badge is valid, but it does not open that room (see Connecting & Logon).",
+    user:"One panel stays empty while the rest of the screen works.",
+    fix:"Handle the failure ack and show “no access to RISK”. This is configuration, not a bug — ask your team to grant the entitlement."},
+  filter:{title:'Bad subscription filter',cat:'Command',sev:'fatal',
+    err:"command failed: parse error in filter \"/Symbol = \"",
+    why:"A typo or invalid expression in your content filter.",
+    user:"The subscription never returns any rows.",
+    fix:"AMPS rejects the command with a failure ack — check it. Validate your filter syntax before you ship."},
+  badmsg:{title:'A bad message arrives',cat:'Message',sev:'warning',
+    err:"MessageHandlerError: cannot read 'TradePrice' of undefined",
+    why:"Your onMessage code hit a message shaped differently than you expected.",
+    user:"Without a guard, the entire feed freezes on one row.",
+    fix:"Wrap your handler body in try/catch. Log the bad message and keep going — one row must never kill the subscription."},
+  pubfail:{title:'Publish rejected',cat:'Command',sev:'fatal',
+    err:"publish failed: topic 'MARKET_DATA' is not writable by 'trader'",
+    why:"You tried to publish to a read-only topic, or used the wrong message type.",
+    user:"Your action (e.g. sending an order) silently does nothing.",
+    fix:"Check the publish ack for success/failure. Confirm write entitlements and that the topic’s message type matches your connection."}
 };
 C({id:'errors',group:'prod',icon:'🚑',title:'Error Handling',sub:'Your seatbelt: decide what happens when things break.',
 render:()=>`
-  <div class="analogy">🚗 <b>Error handling is a seatbelt.</b> Networks blip, a message arrives malformed, a logon gets rejected. Without handlers your app just crashes. With them, <i>you</i> decide what happens — show a banner, retry, skip the bad message — and the screen stays alive.</div>
-  <p class="body">Click a thing-that-goes-wrong to see the error and the recommended response:</p>
+  <div class="analogy">🦺 <b>Error handling is your seatbelt.</b> Networks blip, a message arrives malformed, a logon gets rejected, a topic says “not for you.” Without handlers your app crashes or — worse — freezes while still looking alive. With them, <i>you</i> decide what happens: show a banner, retry, skip the bad row. The trader’s screen stays honest.</div>
+  <p class="body">Click each thing-that-goes-wrong to see the real error, why it happens, what the trader sees, and the fix — then copy the skeleton below.</p>
   <div class="card">
     <h2>🚑 Simulate a failure</h2>
+    <p class="hint">Seven failures you’ll actually meet, tagged by category and severity:</p>
     <div class="chips" id="er_chips"></div>
     <div id="er_out" style="margin-top:12px"></div>
   </div>
-  <div class="note blue">There are two families of errors: <b>connection errors</b> (the link to AMPS) and <b>message/handler errors</b> (one message went wrong). Handle them separately, and never silently swallow an error — a quiet failure on a trading screen is dangerous.</div>
+  <div class="card">
+    <h2>🧯 The error-handling skeleton</h2>
+    <p class="hint">Four handlers cover almost everything — this is the shape to copy:</p>
+    <pre>const client = new Client('orders-ui-7f3a');
+
+// 1 · Connect + logon — wrap in try/catch
+try {
+  await client.connect('wss://amps-dev:9007/amps/json');
+  await client.logon('trader', '••••');
+} catch (err) {
+  showBanner('Cannot reach trading data — retrying…');
+  scheduleReconnect();          // back off, never tight-loop
+  return;
+}
+
+// 2 · Connection drops later — disconnect handler
+client.onDisconnect = () => showBanner('Reconnecting…');
+//     an HAClient fails over to a backup automatically
+
+// 3 · A command (subscribe/publish) can be rejected — check it
+client.subscribe(onMessage, 'ORDERS', "/Symbol = 'AAPL'")
+  .catch(err => showError('Subscription failed: ' + err.message));
+
+// 4 · One bad message must NOT kill the feed
+function onMessage(msg) {
+  try { render(msg.data); }
+  catch (e) { console.error('Skipping bad message', e); }
+}</pre>
+  </div>
+  <div class="card">
+    <h2>✅ Always-do checklist</h2>
+    <div id="er_check"></div>
+  </div>
+  <div class="note blue">Two families of error: <b>connection errors</b> (the link to AMPS — usually transient and auto-recoverable) and <b>command / message errors</b> (a subscribe, publish, or single message went wrong — usually your code or entitlements). Handle them separately, check the <b>ack</b> AMPS returns on every command, and never silently swallow an error.</div>
 `,init:()=>{
   const chips=document.getElementById('er_chips'), out=document.getElementById('er_out');
+  const SEV={fatal:['#fee2e2','#991b1b','Fatal · user blocked'],warning:['#fef3c7','#92400e','Handle it · localized'],transient:['#dbeafe','#1e40af','Transient · auto-recovers']};
+  const badge=(t,bg,fg)=>'<span style="display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;background:'+bg+';color:'+fg+'">'+esc(t)+'</span>';
+  const line=(l,t)=>'<div style="margin-top:9px"><div style="font-size:11.5px;font-weight:700;color:#64748b;letter-spacing:.04em">'+l.toUpperCase()+'</div><div style="margin-top:2px">'+t+'</div></div>';
   Object.keys(ERRORS).forEach((k,i)=>{
     const b=document.createElement('button');b.className='chip';b.textContent=ERRORS[k].title;
     b.onclick=()=>{const e=ERRORS[k];[...chips.children].forEach(c=>c.style.borderColor='#cbd5e1');b.style.borderColor='#2563eb';
-      out.innerHTML='<pre style="background:#3b0d0d;color:#fca5a5">'+esc(e.err)+'</pre><div class="note green" style="margin-top:10px"><b>What to do:</b> '+e.fix+'</div>';};
+      out.innerHTML='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'+badge(e.cat,'#f1f5f9','#334155')+badge(SEV[e.sev][2],SEV[e.sev][0],SEV[e.sev][1])+'</div>'
+        +'<pre style="background:#3b0d0d;color:#fca5a5">'+esc(e.err)+'</pre>'
+        +line('Why it happens',esc(e.why))
+        +line('What the user sees',esc(e.user))
+        +'<div class="note green" style="margin-top:10px"><b>What to do:</b> '+esc(e.fix)+'</div>';};
     chips.appendChild(b); if(i===0)b.click();
   });
+  const CHECK=[
+    "Wrap <code class=\"inline\">connect()</code> and <code class=\"inline\">logon()</code> in try/catch — show a clear failure, never a blank screen.",
+    "Register a disconnect handler with a “reconnecting…” banner so the screen never just freezes.",
+    "Put try/catch <b>inside</b> every message handler — one bad row must not kill the whole feed.",
+    "Check command acks — <code class=\"inline\">subscribe</code> and <code class=\"inline\">publish</code> can be rejected (bad filter, no entitlement).",
+    "Tell <b>fatal</b> (bad creds, no entitlement) apart from <b>transient</b> (network blip) and react differently.",
+    "Back off on retries (1s → 2s → 4s) — never tight-loop a reconnect.",
+    "Log with context (topic, subscription, message). Silent failures on a trading screen are dangerous."
+  ];
+  document.getElementById('er_check').innerHTML=CHECK.map(c=>'<div style="display:flex;gap:9px;align-items:flex-start;padding:6px 0;border-bottom:1px solid #eef2f7"><span style="color:#16a34a;font-weight:700">✓</span><span>'+c+'</span></div>').join('');
 }});
 
 /* ---------- P4. HIGH AVAILABILITY ---------- */
